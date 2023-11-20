@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "tek-plexor"
+version = "0.1.0"
+description = "High quality audio downloader"
+authors = ["Nick Matthews <nickd.mf7@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-ffmpeg = "^2.0.4"
+pyqt6 = "^6.4.2"
+pytube = "^15.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
