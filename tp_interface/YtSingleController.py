@@ -1,11 +1,11 @@
 from tp_engine.yt_api import get_title, download_single_audio
 from tp_conversion.converter import opus_to_m4a
-from tp_interface.app import *
+from tp_interface.app import MainWindow
 
 
 # contains a reference QmainWindow object for the main window of the application
 class YtSingleController:
-    def __init__(self, main_window):
+    def __init__(self, main_window: MainWindow):
         super().__init__()
         self.mw = main_window
         self.connectSignalsSlots()

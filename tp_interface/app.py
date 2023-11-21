@@ -1,7 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox
 from .main_window_ui import Ui_MainWindow
-from tp_interface.YtSingleController import YtSingleController
 
 
 # show the main window
@@ -15,6 +14,9 @@ def start_app():
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Controller imports must be done here to avoid circular imports
+        from .YtSingleController import YtSingleController
+
         self.setupUi(self)
         self.ytSingleController = YtSingleController(self)
         # state variables
