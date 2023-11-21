@@ -15,7 +15,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Controller imports must be done here to avoid circular imports
-        from .YtSingleController import YtSingleController
+        from .yt_single_controller import YtSingleController
 
         self.setupUi(self)
         self.ytSingleController = YtSingleController(self)

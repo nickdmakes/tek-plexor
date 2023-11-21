@@ -18,7 +18,7 @@ def get_title(url: str):
         info = yt.vid_info
         title = info['videoDetails']['title']
         artist = info['videoDetails']['author']
-        full_title = artist + ' - ' + title
+        full_title = artist + '-' + title
         return full_title
     except Exception as e:
         raise YTAudioDownloadException(e)
