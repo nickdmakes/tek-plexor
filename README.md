@@ -82,6 +82,27 @@ Instructions for install can be found [here](https://ffmpeg.org/download.html)
    poetry install --no-root
    ```
 
+### Development
+Start by activating the virtual enviornment
+
+##### Mac
+```sh
+source .venv/bin/activate
+```
+##### Windows
+```sh
+.venv\Scripts\activate
+```
+
+To open the PyQt6 designer editor, run
+```sh
+pyqt6-tools designer
+```
+pyqt6 .ui files can be found under **tek-plexor/tp_interface/ui**. Once you have saved new changes in designer, convert the .ui file to Python with the following command **from the tp_interface directory**...
+```sh
+pyuic6 -o main_window_ui.py -x ui/main_window.ui
+```
+
 <!-- LICENSE -->
 ## License
 
