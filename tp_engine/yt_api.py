@@ -45,7 +45,7 @@ def get_title(url: str):
         raise YTAudioDownloadException(e)
 
 
-def download_single_audio(url: str, file_name: str, out_path="./"):
+def download_single_audio(url: str, filename: str, out_path="./"):
     try:
         yt = YouTube(url)
         all_streams = yt.streams.filter(only_audio=True).order_by('abr').desc()
@@ -53,6 +53,10 @@ def download_single_audio(url: str, file_name: str, out_path="./"):
         for stream in all_streams:
             print(stream)
         
-        return all_streams.first().download(filename=file_name, output_path=out_path, skip_existing=True)
+        # extension handling
+        stream = all_streams.first()
+        ext = stream.subtype
+        filename += f".{ext}"
+        return (stream.download(filename=filename, output_path=out_path, skip_existing=True), filename)
     except Exception as e:
         raise YTAudioDownloadException(e)
