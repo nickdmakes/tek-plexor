@@ -30,6 +30,18 @@ class YtSingleController:
     def setupUi(self):
         self.mw.singleUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
 
+    def fieldsValid(self):
+        fields_set = True
+        if self.mw.singleUrlInput.text() == "":
+            fields_set = False
+        if self.mw.singleSongNameInput.text() == "":
+            fields_set = False
+        if self.mw.singleArtistInput.text() == "":
+            fields_set = False
+        if self.mw.singleDestinationInput.text() == "":
+            fields_set = False
+        return fields_set
+
     def downloadStarted(self):
         self.mw.singleDownloadButton.setEnabled(False)
         self.mw.statusbar.showMessage("Download Started...")
@@ -74,6 +86,9 @@ class YtSingleController:
         self.mw.progressBar.setValue(0)
 
     def singleDownloadButtonClicked(self):
+        if not self.fieldsValid():
+            self.debugLogger.errorLog("Error: One or more fields are empty")
+            return
         worker = SingleDownloadWorker(self.singleDownload_fn)
         worker.signals.download_started.connect(self.downloadStarted)
         worker.signals.original_song_download_started.connect(self.originalSongDownloadStarted)

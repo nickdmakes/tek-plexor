@@ -214,7 +214,7 @@ class Ui_MainWindow(object):
         self.singleUrlLabel.setText(_translate("MainWindow", "URL:"))
         self.singleMetaData.setTitle(_translate("MainWindow", "Metadata"))
         self.singleArtistLabel.setText(_translate("MainWindow", "Artist:"))
-        self.singleSongNameLabel.setText(_translate("MainWindow", "Song Name:"))
+        self.singleSongNameLabel.setText(_translate("MainWindow", "Title:"))
         self.singleFileSettings.setTitle(_translate("MainWindow", "File Settings"))
         self.singleDestinationLabel.setText(_translate("MainWindow", "Dest:"))
         self.singleBrowseButton.setText(_translate("MainWindow", "Browse"))
