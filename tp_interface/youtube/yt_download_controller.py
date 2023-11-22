@@ -1,9 +1,10 @@
+import os
 from PyQt6 import QtGui
 from PyQt6.QtCore import QThreadPool
 from PyQt6.QtWidgets import QFileDialog
 
 from tp_engine.yt_api import get_yt_info_from_link, download_single_audio, YTTitleRetrievalException
-from tp_conversion.converter import convert_to_m4a
+from tp_conversion.converter import convert
 from tp_interface.app import MainWindow
 from tp_interface.debug_logger import DebugLogger
 
@@ -30,17 +31,24 @@ class YtDownloadController:
     def setupUi(self):
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
 
-    def fieldsValid(self):
-        fields_set = True
-        if self.mw.ytUrlInput.text() == "":
-            fields_set = False
-        if self.mw.ytTitleInput.text() == "":
-            fields_set = False
-        if self.mw.ytArtistInput.text() == "":
-            fields_set = False
-        if self.mw.ytDestinationInput.text() == "":
-            fields_set = False
-        return fields_set
+    def payloadValid(self, payload: YtDownloadPayload):
+        valid = True
+        if payload.url == "":
+            self.debugLogger.errorLog("Error: URL field is empty")
+            valid = False
+        if payload.title == "":
+            self.debugLogger.errorLog("Error: Title field is empty")
+            valid = False
+        if payload.artist == "":
+            self.debugLogger.errorLog("Error: Artist field is empty")
+            valid = False
+        if payload.out_path == "":
+            self.debugLogger.errorLog("Error: Destination field is empty")
+            valid = False
+        if not os.path.exists(payload.out_path):
+            self.debugLogger.errorLog("Error: Destination folder does not exist")
+            valid = False
+        return valid
 
     def ytBitRateDialChanged(self, value):
         bit_rates = [96, 128, 192, 256, 320]
@@ -52,10 +60,10 @@ class YtDownloadController:
             self.mw.ytDestinationInput.setText(directory)
 
     def ytDownloadButtonClicked(self):
-        if not self.fieldsValid():
-            self.debugLogger.errorLog("Error: One or more fields are empty")
-            return
         payload = YtDownloadPayload().makePayload(self.mw)
+        if not self.payloadValid(payload):
+            return
+
         worker = YtDownloadWorker(self.ytDownload_fn, payload=payload)
         worker.signals.download_started.connect(self.downloadStarted)
         worker.signals.original_song_download_started.connect(self.originalSongDownloadStarted)
@@ -68,9 +76,9 @@ class YtDownloadController:
         self.threadpool.start(worker)
 
     def ytDownload_fn(self, osdsc, osdf, scs, scf, payload: YtDownloadPayload):
-        title = self.mw.ytTitleInput.text().strip()
-        artist = self.mw.ytArtistInput.text().strip()
-        filename = f'{payload.title} - {payload.artist}'
+        title = payload.title
+        artist = payload.artist
+        filename = f'{title} - {artist}'
         osdsc.emit()
         # download will add the correct extension to filename
         out_file, filename = download_single_audio(url=payload.url, out_path=payload.out_path,
@@ -78,7 +86,7 @@ class YtDownloadController:
         osdf.emit(filename)
         if payload.conversion_enabled:
             scs.emit()
-            convert_to_m4a(out_file, title, artist, delete_in_file=payload.delete_og)
+            convert(out_file, payload.toDict())
             scf.emit(filename)
 
     def downloadStarted(self):
@@ -88,29 +96,29 @@ class YtDownloadController:
         self.mw.progressBar.setValue(5)
 
     def originalSongDownloadStarted(self):
-        self.debugLogger.infoLog(f'fetching high quality audio from Youtube...')
+        self.debugLogger.infoLog(f'Fetching high quality audio from Youtube...')
         self.mw.progressBar.setValue(30)
 
     def originalSongDownloadFinished(self, filename):
         self.mw.statusbar.showMessage("Downloaded song from YouTube")
-        self.debugLogger.successLog(f'downloaded {filename} from Youtube')
+        self.debugLogger.successLog(f'Downloaded {filename} from Youtube')
         self.mw.progressBar.setValue(50)
 
     def songConversionStarted(self):
         self.mw.statusbar.showMessage("Converting audio codecs...")
-        self.debugLogger.infoLog(f'converting original codec to m4a...')
+        self.debugLogger.infoLog(f'Converting original codec...')
         self.mw.progressBar.setValue(70)
 
     def songConversionFileExists(self, filenames):
         self.debugLogger.errorLog(f'File already exists: {filenames[0]}')
         self.debugLogger.errorLog(f'File renamed to {filenames[1]}')
-        self.debugLogger.errorLog(f"Press 'Download' again to retry")
+        self.debugLogger.errorLog(f"Press Download again to retry")
         self.mw.ytDownloadButton.setEnabled(True)
         self.mw.statusbar.showMessage("Download failed!")
         self.mw.progressBar.setValue(0)
 
     def songConversionFinished(self, filename):
-        self.debugLogger.successLog(f'successfully converted {filename} to m4a')
+        self.debugLogger.successLog(f'Successfully converted {filename}')
         self.mw.progressBar.setValue(90)
 
     def downloadFinished(self):

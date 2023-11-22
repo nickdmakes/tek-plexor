@@ -114,6 +114,8 @@ pyuic6 -o main_window_ui.py -x ui/main_window.ui
 
 [MP4 Tags (Mutagen)](https://mutagen.readthedocs.io/en/latest/api/mp4.html)
 
+[Opus Tags](https://www.opus-codec.org/docs/)
+
 [eyed3 Docs](https://eyed3.readthedocs.io/en/latest/)
 
 [Youtube Formats](https://gist.github.com/AgentOak/34d47c65b1d28829bb17c24c04a0096f)
