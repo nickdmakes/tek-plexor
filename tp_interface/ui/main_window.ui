@@ -78,7 +78,7 @@
           </size>
          </property>
          <attribute name="title">
-          <string>Single</string>
+          <string>YouTube</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0">
           <property name="sizeConstraint">
@@ -249,7 +249,7 @@
                   </sizepolicy>
                  </property>
                  <property name="title">
-                  <string>Compression</string>
+                  <string>Format</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -270,7 +270,7 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>  OGG</string>
+                     <string>  ogg</string>
                     </property>
                    </widget>
                   </item>
@@ -582,7 +582,7 @@
           <string/>
          </property>
          <attribute name="title">
-          <string>Playlist</string>
+          <string>Other</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>

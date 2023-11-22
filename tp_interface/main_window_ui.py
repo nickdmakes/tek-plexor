@@ -348,8 +348,8 @@ class Ui_MainWindow(object):
         self.ytTitleLabel.setText(_translate("MainWindow", "Title:"))
         self.ytArtistLabel.setText(_translate("MainWindow", "Artist:"))
         self.ytConversionSettings.setTitle(_translate("MainWindow", "Conversion"))
-        self.ytConversionCompressionSettings.setTitle(_translate("MainWindow", "Compression"))
-        self.ytCompressionRadioOgg.setText(_translate("MainWindow", "  OGG"))
+        self.ytConversionCompressionSettings.setTitle(_translate("MainWindow", "Format"))
+        self.ytCompressionRadioOgg.setText(_translate("MainWindow", "  ogg"))
         self.ytCompressionRadioM4a.setText(_translate("MainWindow", "  m4a"))
         self.ytCompressionRadioMp4.setText(_translate("MainWindow", "  mp4"))
         self.ytCompressionRadioMp3.setText(_translate("MainWindow", "  mp3"))
@@ -361,10 +361,10 @@ class Ui_MainWindow(object):
         self.ytDestinationLabel.setText(_translate("MainWindow", "Dest:"))
         self.ytDestinationBrowseButton.setText(_translate("MainWindow", "Browse"))
         self.ytDownloadButton.setText(_translate("MainWindow", "Download"))
-        self.toolTab.setTabText(self.toolTab.indexOf(self.YouTubeTab), _translate("MainWindow", "Single"))
+        self.toolTab.setTabText(self.toolTab.indexOf(self.YouTubeTab), _translate("MainWindow", "YouTube"))
         self.label.setText(_translate("MainWindow", "Placeholder"))
         self.label_2.setText(_translate("MainWindow", "another one"))
-        self.toolTab.setTabText(self.toolTab.indexOf(self.tabPlaylist), _translate("MainWindow", "Playlist"))
+        self.toolTab.setTabText(self.toolTab.indexOf(self.tabPlaylist), _translate("MainWindow", "Other"))
 
 
 if __name__ == "__main__":
