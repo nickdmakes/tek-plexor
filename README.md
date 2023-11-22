@@ -27,6 +27,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#resources">Resources</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -83,7 +84,7 @@ Instructions for install can be found [here](https://ffmpeg.org/download.html)
    ```
 
 ### Development
-Start by activating the virtual enviornment
+Start by activating the virtual environment
 
 ##### Mac
 ```sh
@@ -102,6 +103,20 @@ pyqt6 .ui files can be found under **tek-plexor/tp_interface/ui**. Once you have
 ```sh
 pyuic6 -o main_window_ui.py -x ui/main_window.ui
 ```
+
+<!-- RESOURCES -->
+## Resources
+[Pytube Docs](https://pytube.io/en/latest/api.html)
+
+[WEBM to MP3](https://stackoverflow.com/questions/72679106/how-to-convert-in-memory-webm-audio-file-to-mp3-audio-file-in-python)
+
+[FFMPEG Encodings](https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio)
+
+[MP4 Tags (Mutagen)](https://mutagen.readthedocs.io/en/latest/api/mp4.html)
+
+[eyed3 Docs](https://eyed3.readthedocs.io/en/latest/)
+
+[Youtube Formats](https://gist.github.com/AgentOak/34d47c65b1d28829bb17c24c04a0096f)
 
 <!-- LICENSE -->
 ## License

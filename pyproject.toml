@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.9"
 python-ffmpeg = "^2.0.4"
 pyqt6 = "^6.4"
 pytube = "^15.0.0"

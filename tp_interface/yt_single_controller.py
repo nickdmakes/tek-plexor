@@ -98,12 +98,9 @@ class YtSingleController:
         if text == "":
             return
         try:
-            title = get_title(url=text)
-            print(title)
-            title_split = title.split("-")
-            if len(title_split) >= 2:
-                self.mw.singleArtistInput.setText(title_split[0].strip())
-                self.mw.singleSongNameInput.setText(title_split[1].strip())
+            title, artist = get_title(url=text)
+            self.mw.singleSongNameInput.setText(title)
+            self.mw.singleArtistInput.setText(artist)
             self.debugLogger.infoLog(f"Youtube title found: {title}")
             self.mw.singleUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/green_checkmark.png"))
         except Exception as e:

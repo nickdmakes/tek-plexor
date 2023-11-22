@@ -1,6 +1,7 @@
 # poetry
 poetry.lock
 .venv
+.vscode
 
 # project specific
 data/
