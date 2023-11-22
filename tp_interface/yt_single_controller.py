@@ -12,6 +12,48 @@ from tp_interface.app import MainWindow
 from .debug_logger import DebugLogger
 
 
+class SingleDownloadPayload:
+    """Factory class for creating a snapshot payload for the single download worker"""
+    def __init__(self, url: str = "", title: str = "", artist: str = "", conversion_enabled: bool = True,
+                 compression: str = "m4a", bitrate: int = 320, delete_og: bool = False, out_path: str = ""):
+        super().__init__()
+        self.url = url
+        self.title = title
+        self.artist = artist
+        self.conversion_enabled = conversion_enabled
+        self.compression = compression
+        self.bitrate = bitrate
+        self.delete_og = delete_og
+        self.out_path = out_path
+
+    def makePayload(self, main_window: MainWindow):
+        bit_rates = [96, 128, 192, 256, 320]
+
+        self.url = main_window.singleUrlInput.text().strip()
+        self.title = main_window.singleSongNameInput.text().strip()
+        self.artist = main_window.singleArtistInput.text().strip()
+        self.conversion_enabled = main_window.singleConversionSettings.isChecked()
+        if main_window.singleCompressionRadioFlac.isChecked():
+            self.compression = "FLAC"
+        elif main_window.singleCompressionRadioM4a.isChecked():
+            self.compression = "m4a"
+        elif main_window.singleCompressionRadioMp3.isChecked():
+            self.compression = "mp3"
+        elif main_window.singleCompressionRadioMp4.isChecked():
+            self.compression = "mp4"
+
+        # If FLAC is selected, bitrate is ignored (set to 0)
+        if self.compression == "FLAC":
+            self.bitrate = 0
+        else:
+            dial_position = main_window.singleBitRateDial.value()
+            self.bitrate = bit_rates[dial_position]
+
+        self.delete_og = main_window.singleConversionKeepOriginal.isChecked()
+        self.out_path = main_window.singleDestinationInput.text().strip()
+        return self
+
+
 # contains a reference QmainWindow object for the main window of the application
 class YtSingleController:
     def __init__(self, main_window: MainWindow):
@@ -21,11 +63,17 @@ class YtSingleController:
         self.threadpool = QThreadPool()
         self.setupUi()
         self.debugLogger = DebugLogger(self.mw.debugConsole)
+        self.downloadPayload = SingleDownloadPayload()
 
     def connectSignalsSlots(self):
         self.mw.singleDownloadButton.clicked.connect(self.singleDownloadButtonClicked)
         self.mw.singleUrlInput.textChanged.connect(self.singleUrlInputChanged)
         self.mw.singleBrowseButton.clicked.connect(self.singleBrowseDestinationButtonClicked)
+        self.mw.singleCompressionRadioFlac.clicked.connect(self.singleCompressionRadioToggled)
+        self.mw.singleCompressionRadioM4a.clicked.connect(self.singleCompressionRadioToggled)
+        self.mw.singleCompressionRadioMp3.clicked.connect(self.singleCompressionRadioToggled)
+        self.mw.singleCompressionRadioMp4.clicked.connect(self.singleCompressionRadioToggled)
+        self.mw.singleBitRateDial.valueChanged.connect(self.singleBitRateDialChanged)
 
     def setupUi(self):
         self.mw.singleUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
@@ -41,6 +89,24 @@ class YtSingleController:
         if self.mw.singleDestinationInput.text() == "":
             fields_set = False
         return fields_set
+
+    def singleCompressionRadioToggled(self):
+        if self.mw.singleCompressionRadioFlac.isChecked():
+            self.mw.singleBitRateSettings.setEnabled(False)
+            self.mw.singleBitRateLabel.setText("FLAC")
+        else:
+            self.mw.singleBitRateSettings.setEnabled(True)
+            self.mw.singleBitRateDial.valueChanged.emit(self.mw.singleBitRateDial.value())
+
+    def singleBitRateDialChanged(self, value):
+        bit_rates = [96, 128, 192, 256, 320]
+        self.mw.singleBitRateLabel.setText(f"{bit_rates[value]} kbps")
+
+    def singleConversionEnabledCheckBoxChanged(self, state):
+        if state == 2:
+            self.mw.singleConversionSettings.setEnabled(True)
+        else:
+            self.mw.singleConversionSettings.setEnabled(False)
 
     def downloadStarted(self):
         self.mw.singleDownloadButton.setEnabled(False)
@@ -67,6 +133,7 @@ class YtSingleController:
         self.debugLogger.errorLog(f'File renamed to {filenames[1]}')
         self.debugLogger.errorLog(f"Press 'Download' again to retry")
         self.mw.singleDownloadButton.setEnabled(True)
+        self.mw.statusbar.showMessage("Download failed!")
         self.mw.progressBar.setValue(0)
 
     def songConversionFinished(self, filename):
@@ -89,7 +156,10 @@ class YtSingleController:
         if not self.fieldsValid():
             self.debugLogger.errorLog("Error: One or more fields are empty")
             return
-        worker = SingleDownloadWorker(self.singleDownload_fn)
+
+        payload = SingleDownloadPayload().makePayload(self.mw)
+
+        worker = SingleDownloadWorker(self.singleDownload_fn, payload=payload)
         worker.signals.download_started.connect(self.downloadStarted)
         worker.signals.original_song_download_started.connect(self.originalSongDownloadStarted)
         worker.signals.original_song_download_finished.connect(self.originalSongDownloadFinished)
@@ -105,18 +175,19 @@ class YtSingleController:
         if directory:
             self.mw.singleDestinationInput.setText(directory)
 
-    def singleDownload_fn(self, osdsc, osdf, scs, scf):
+    def singleDownload_fn(self, osdsc, osdf, scs, scf, payload: SingleDownloadPayload):
         title = self.mw.singleSongNameInput.text().strip()
         artist = self.mw.singleArtistInput.text().strip()
-        filename = f'{title} - {artist}'
+        filename = f'{payload.title} - {payload.artist}'
         osdsc.emit()
-        out_path = self.mw.singleDestinationInput.text().strip()
         # download will add the correct extension to filename
-        out_file, filename = download_single_audio(url=self.mw.singleUrlInput.text(), out_path=out_path, filename=filename)
+        out_file, filename = download_single_audio(url=payload.url, out_path=payload.out_path,
+                                                   filename=filename)
         osdf.emit(filename)
-        scs.emit()
-        convert_to_m4a(out_file, title, artist, delete_in_file=False)
-        scf.emit(filename)
+        if payload.conversion_enabled:
+            scs.emit()
+            convert_to_m4a(out_file, title, artist, delete_in_file=payload.delete_og)
+            scf.emit(filename)
 
     def singleUrlInputChanged(self, text):
         """change the status icon to green if the url is valid. Also,
@@ -150,7 +221,7 @@ class SingleDownloadWorkerSignals(QObject):
 
 
 class SingleDownloadWorker(QRunnable):
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self, fn, payload: SingleDownloadPayload, *args, **kwargs):
         super(SingleDownloadWorker, self).__init__()
         # Store constructor arguments (re-used for processing)
         self.fn = fn
@@ -162,6 +233,7 @@ class SingleDownloadWorker(QRunnable):
         self.kwargs['osdf'] = self.signals.original_song_download_finished
         self.kwargs['scs'] = self.signals.song_conversion_started
         self.kwargs['scf'] = self.signals.song_conversion_finished
+        self.kwargs['payload'] = payload
 
     @pyqtSlot()
     def run(self):
