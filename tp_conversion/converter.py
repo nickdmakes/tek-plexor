@@ -1,5 +1,5 @@
 import os
-from ffmpeg import FFmpeg, Progress, FFmpegError
+from ffmpeg import FFmpeg, FFmpegError
 from mutagen.mp4 import MP4
 
 

@@ -11,7 +11,12 @@ class YTTitleRetrievalException(Exception):
     pass
 
 
-def get_title(url: str):
+def get_yt_info_from_link(url: str):
+    """
+    Retrieves info for a YouTube link
+        :param url: the YouTube video url
+        :returns: tuple of (title, artist, playlist)
+    """
     try:
         yt = YouTube(url)
         info = yt.vid_info
@@ -40,9 +45,9 @@ def get_title(url: str):
         if artist != info_artist and info_artist != "":
             artist += f" ({info_artist})"
         
-        return (title, artist)
+        return title, artist
     except Exception as e:
-        raise YTAudioDownloadException(e)
+        raise YTTitleRetrievalException(e)
 
 
 def download_single_audio(url: str, filename: str, out_path="./"):
@@ -57,6 +62,6 @@ def download_single_audio(url: str, filename: str, out_path="./"):
         stream = all_streams.first()
         ext = stream.subtype
         filename += f".{ext}"
-        return (stream.download(filename=filename, output_path=out_path, skip_existing=True), filename)
+        return stream.download(filename=filename, output_path=out_path, skip_existing=True), filename
     except Exception as e:
         raise YTAudioDownloadException(e)

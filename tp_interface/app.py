@@ -1,6 +1,6 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox
-from .main_window_ui import Ui_MainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow
+from tp_interface.main_window_ui import Ui_MainWindow
 
 
 # show the main window
@@ -15,12 +15,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Controller imports must be done here to avoid circular imports
-        from .yt_single_controller import YtSingleController
+        from tp_interface.youtube.yt_download_controller import YtDownloadController
 
         self.setupUi(self)
-        self.ytSingleController = YtSingleController(self)
-        # state variables
-        self.downloading = False
+        self.ytSingleController = YtDownloadController(self)
 
-    def setDownloading(self, new_state: bool = False):
-        self.downloading = new_state
+

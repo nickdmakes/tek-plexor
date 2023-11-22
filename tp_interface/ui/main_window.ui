@@ -22,7 +22,7 @@
      <enum>QLayout::SetDefaultConstraint</enum>
     </property>
     <item>
-     <layout class="QHBoxLayout" name="Row_01" stretch="4,0,5">
+     <layout class="QHBoxLayout" name="Row_01" stretch="0,0,5">
       <item>
        <widget class="QTabWidget" name="toolTab">
         <property name="sizePolicy">
@@ -61,7 +61,7 @@
         <property name="documentMode">
          <bool>false</bool>
         </property>
-        <widget class="QWidget" name="tabSingle">
+        <widget class="QWidget" name="YouTubeTab">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -96,7 +96,7 @@
              <number>10</number>
             </property>
             <item>
-             <widget class="QLabel" name="singleUrlLabel">
+             <widget class="QLabel" name="ytUrlLabel">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -109,7 +109,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="singleUrlInput">
+             <widget class="QLineEdit" name="ytUrlInput">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -119,7 +119,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="singleUrlStatusIcon">
+             <widget class="QLabel" name="ytUrlStatusIcon">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -155,7 +155,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QGroupBox" name="singleMetaData">
+           <widget class="QGroupBox" name="ytMetaData">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -172,20 +172,20 @@
              <item>
               <layout class="QGridLayout" name="Grid_01" rowstretch="0,0">
                <item row="0" column="1">
-                <widget class="QLineEdit" name="singleSongNameInput"/>
+                <widget class="QLineEdit" name="ytTitleInput"/>
                </item>
                <item row="0" column="0">
-                <widget class="QLabel" name="singleSongNameLabel">
+                <widget class="QLabel" name="ytTitleLabel">
                  <property name="text">
                   <string>Title:</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QLineEdit" name="singleArtistInput"/>
+                <widget class="QLineEdit" name="ytArtistInput"/>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="singleArtistLabel">
+                <widget class="QLabel" name="ytArtistLabel">
                  <property name="text">
                   <string>Artist:</string>
                  </property>
@@ -202,7 +202,7 @@
           <item>
            <layout class="QHBoxLayout" name="Row_05">
             <item>
-             <widget class="QGroupBox" name="singleConversionSettings">
+             <widget class="QGroupBox" name="ytConversionSettings">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -241,7 +241,7 @@
                 <number>12</number>
                </property>
                <item>
-                <widget class="QGroupBox" name="singleCompressionSettings">
+                <widget class="QGroupBox" name="ytConversionCompressionSettings">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -256,7 +256,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
                   <item>
-                   <widget class="QRadioButton" name="singleCompressionRadioFlac">
+                   <widget class="QRadioButton" name="ytCompressionRadioOgg">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -270,12 +270,12 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>  FLAC</string>
+                     <string>  OGG</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="singleCompressionRadioM4a">
+                   <widget class="QRadioButton" name="ytCompressionRadioM4a">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -297,7 +297,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="singleCompressionRadioMp4">
+                   <widget class="QRadioButton" name="ytCompressionRadioMp4">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -316,7 +316,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="singleCompressionRadioMp3">
+                   <widget class="QRadioButton" name="ytCompressionRadioMp3">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -338,7 +338,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QGroupBox" name="singleBitRateSettings">
+                <widget class="QGroupBox" name="ytConversionBitRateSettings">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -352,7 +352,7 @@
                   <item>
                    <layout class="QHBoxLayout" name="Row_04">
                     <item>
-                     <widget class="QDial" name="singleBitRateDial">
+                     <widget class="QDial" name="ytBitRateDial">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -409,7 +409,7 @@
                    </layout>
                   </item>
                   <item>
-                   <widget class="QLabel" name="singleBitRateLabel">
+                   <widget class="QLabel" name="ytBitRateLabel">
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
@@ -428,7 +428,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QGroupBox" name="singleOtherSettings">
+                <widget class="QGroupBox" name="ytConversionOtherSettings">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -446,7 +446,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="singleConversionKeepOriginal">
+                   <widget class="QCheckBox" name="ytConversionKeepOriginal">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -486,7 +486,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QGroupBox" name="singleFileSettings">
+           <widget class="QGroupBox" name="ytFileSettings">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -503,10 +503,10 @@
              <item>
               <layout class="QGridLayout" name="Grid_02">
                <item row="0" column="1">
-                <widget class="QLineEdit" name="singleDestinationInput"/>
+                <widget class="QLineEdit" name="ytDestinationInput"/>
                </item>
                <item row="0" column="0">
-                <widget class="QLabel" name="singleDestinationLabel">
+                <widget class="QLabel" name="ytDestinationLabel">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -522,7 +522,7 @@
                 </widget>
                </item>
                <item row="0" column="2">
-                <widget class="QPushButton" name="singleBrowseButton">
+                <widget class="QPushButton" name="ytDestinationBrowseButton">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -555,7 +555,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QPushButton" name="singleDownloadButton">
+             <widget class="QPushButton" name="ytDownloadButton">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -575,6 +575,9 @@
          </layout>
         </widget>
         <widget class="QWidget" name="tabPlaylist">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="accessibleName">
           <string/>
          </property>
@@ -676,16 +679,16 @@
      <x>0</x>
      <y>0</y>
      <width>980</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
-  <tabstop>singleUrlInput</tabstop>
-  <tabstop>singleSongNameInput</tabstop>
-  <tabstop>singleArtistInput</tabstop>
+  <tabstop>ytUrlInput</tabstop>
+  <tabstop>ytTitleInput</tabstop>
+  <tabstop>ytArtistInput</tabstop>
   <tabstop>debugConsole</tabstop>
  </tabstops>
  <resources/>
