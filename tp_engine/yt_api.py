@@ -11,24 +11,52 @@ class YTTitleRetrievalException(Exception):
     pass
 
 
-# get the title of a YouTube video
 def get_title(url: str):
     try:
         yt = YouTube(url)
         info = yt.vid_info
-        title = info['videoDetails']['title']
-        artist = info['videoDetails']['author']
-        full_title = artist + '-' + title
-        return full_title
+        info_title = info['videoDetails']['title'].strip()
+        info_artist = info['videoDetails']['author'].strip()
+        
+        author = yt.author.strip()
+        artist = author
+        if artist == "":
+            artist = info_artist
+        
+        title = yt.title.strip()
+        split_title = title.split("-")
+        if len(split_title) < 2:
+            title = split_title[0].strip()
+        else:
+            temp_artist = split_title[0].strip()
+            if artist == "":
+                artist = temp_artist
+            elif artist != temp_artist and temp_artist != "":
+                # replace artist with filed to left of dash
+                artist = temp_artist
+            title = split_title[1].strip()
+        
+        # add the author if it's not the same as the artist
+        if artist != info_artist and info_artist != "":
+            artist += f" ({info_artist})"
+        
+        return (title, artist)
     except Exception as e:
         raise YTAudioDownloadException(e)
 
 
-def download_single_audio(url: str, file_name: str, out_path="./"):
+def download_single_audio(url: str, filename: str, out_path="./"):
     try:
         yt = YouTube(url)
-        all_streams = yt.streams.filter(only_audio=True, audio_codec="opus")
-        sorted_streams = sorted(all_streams, key=lambda stream: stream.abr)
-        return sorted_streams[0].download(filename=file_name, output_path=out_path)
+        all_streams = yt.streams.filter(only_audio=True).order_by('abr').desc()
+        # debug
+        for stream in all_streams:
+            print(stream)
+        
+        # extension handling
+        stream = all_streams.first()
+        ext = stream.subtype
+        filename += f".{ext}"
+        return (stream.download(filename=filename, output_path=out_path, skip_existing=True), filename)
     except Exception as e:
         raise YTAudioDownloadException(e)

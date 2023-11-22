@@ -1,4 +1,5 @@
 import sys
+import os
 import traceback
 
 from PyQt6 import QtGui
@@ -6,7 +7,7 @@ from PyQt6.QtCore import QRunnable, pyqtSlot, QObject, pyqtSignal, QThreadPool
 from PyQt6.QtWidgets import QFileDialog
 
 from tp_engine.yt_api import get_title, download_single_audio
-from tp_conversion.converter import opus_to_m4a2
+from tp_conversion.converter import FileExistsException, convert_to_m4a
 from tp_interface.app import MainWindow
 from .debug_logger import DebugLogger
 
@@ -29,6 +30,18 @@ class YtSingleController:
     def setupUi(self):
         self.mw.singleUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
 
+    def fieldsValid(self):
+        fields_set = True
+        if self.mw.singleUrlInput.text() == "":
+            fields_set = False
+        if self.mw.singleSongNameInput.text() == "":
+            fields_set = False
+        if self.mw.singleArtistInput.text() == "":
+            fields_set = False
+        if self.mw.singleDestinationInput.text() == "":
+            fields_set = False
+        return fields_set
+
     def downloadStarted(self):
         self.mw.singleDownloadButton.setEnabled(False)
         self.mw.statusbar.showMessage("Download Started...")
@@ -49,6 +62,13 @@ class YtSingleController:
         self.debugLogger.infoLog(f'converting original codec to m4a...')
         self.mw.progressBar.setValue(70)
 
+    def songConversionFileExists(self, filenames):
+        self.debugLogger.errorLog(f'File already exists: {filenames[0]}')
+        self.debugLogger.errorLog(f'File renamed to {filenames[1]}')
+        self.debugLogger.errorLog(f"Press 'Download' again to retry")
+        self.mw.singleDownloadButton.setEnabled(True)
+        self.mw.progressBar.setValue(0)
+
     def songConversionFinished(self, filename):
         self.debugLogger.successLog(f'successfully converted {filename} to m4a')
         self.mw.progressBar.setValue(90)
@@ -66,11 +86,15 @@ class YtSingleController:
         self.mw.progressBar.setValue(0)
 
     def singleDownloadButtonClicked(self):
+        if not self.fieldsValid():
+            self.debugLogger.errorLog("Error: One or more fields are empty")
+            return
         worker = SingleDownloadWorker(self.singleDownload_fn)
         worker.signals.download_started.connect(self.downloadStarted)
         worker.signals.original_song_download_started.connect(self.originalSongDownloadStarted)
         worker.signals.original_song_download_finished.connect(self.originalSongDownloadFinished)
         worker.signals.song_conversion_started.connect(self.songConversionStarted)
+        worker.signals.song_conversion_file_exists.connect(self.songConversionFileExists)
         worker.signals.song_conversion_finished.connect(self.songConversionFinished)
         worker.signals.download_finished.connect(self.downloadFinished)
         worker.signals.download_error.connect(self.downloadError)
@@ -82,14 +106,17 @@ class YtSingleController:
             self.mw.singleDestinationInput.setText(directory)
 
     def singleDownload_fn(self, osdsc, osdf, scs, scf):
-        title = self.mw.singleSongNameInput.text().strip().replace(" ", "_")
+        title = self.mw.singleSongNameInput.text().strip()
+        artist = self.mw.singleArtistInput.text().strip()
+        filename = f'{title} - {artist}'
         osdsc.emit()
         out_path = self.mw.singleDestinationInput.text().strip()
-        out_file = download_single_audio(url=self.mw.singleUrlInput.text(), out_path=f'{out_path}', file_name=f'{title}.opus')
-        osdf.emit(f'{title}.opus')
+        # download will add the correct extension to filename
+        out_file, filename = download_single_audio(url=self.mw.singleUrlInput.text(), out_path=out_path, filename=filename)
+        osdf.emit(filename)
         scs.emit()
-        opus_to_m4a2(out_file, out_file.replace(".opus", ".m4a"), delete_in_file=True)
-        scf.emit(f'{title}.m4a')
+        convert_to_m4a(out_file, title, artist, delete_in_file=False)
+        scf.emit(filename)
 
     def singleUrlInputChanged(self, text):
         """change the status icon to green if the url is valid. Also,
@@ -98,12 +125,9 @@ class YtSingleController:
         if text == "":
             return
         try:
-            title = get_title(url=text)
-            print(title)
-            title_split = title.split("-")
-            if len(title_split) >= 2:
-                self.mw.singleArtistInput.setText(title_split[0].strip())
-                self.mw.singleSongNameInput.setText(title_split[1].strip())
+            title, artist = get_title(url=text)
+            self.mw.singleSongNameInput.setText(title)
+            self.mw.singleArtistInput.setText(artist)
             self.debugLogger.infoLog(f"Youtube title found: {title}")
             self.mw.singleUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/green_checkmark.png"))
         except Exception as e:
@@ -119,6 +143,7 @@ class SingleDownloadWorkerSignals(QObject):
     original_song_download_started = pyqtSignal()
     original_song_download_finished = pyqtSignal(str)
     song_conversion_started = pyqtSignal()
+    song_conversion_file_exists = pyqtSignal(tuple)
     song_conversion_finished = pyqtSignal(str)
     download_finished = pyqtSignal()
     download_error = pyqtSignal(tuple)
@@ -146,6 +171,10 @@ class SingleDownloadWorker(QRunnable):
             self.fn(
                 *self.args, **self.kwargs
             )
+        except FileExistsException as e:
+            # rename file with .bak extension
+            os.rename(e.filename, f'{e.filename}.bak')
+            self.signals.song_conversion_file_exists.emit((e.filename, f'{e.filename}.bak'))
         except Exception as e:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
