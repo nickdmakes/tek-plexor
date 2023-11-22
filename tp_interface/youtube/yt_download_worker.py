@@ -27,7 +27,7 @@ class YtDownloadPayload:
         self.artist = main_window.ytArtistInput.text().strip()
         self.conversion_enabled = main_window.ytConversionSettings.isChecked()
         if main_window.ytCompressionRadioOgg.isChecked():
-            self.compression = "OGG"
+            self.compression = "ogg"
         elif main_window.ytCompressionRadioM4a.isChecked():
             self.compression = "m4a"
         elif main_window.ytCompressionRadioMp3.isChecked():
@@ -42,6 +42,18 @@ class YtDownloadPayload:
         self.delete_og = main_window.ytConversionKeepOriginal.isChecked()
         self.out_path = main_window.ytDestinationInput.text().strip()
         return self
+
+    def toDict(self):
+        return {
+            "url": self.url,
+            "title": self.title,
+            "artist": self.artist,
+            "conversion_enabled": self.conversion_enabled,
+            "compression": self.compression,
+            "bitrate": self.bitrate,
+            "delete_og": self.delete_og,
+            "out_path": self.out_path
+        }
 
 
 class YtDownloadWorkerSignals(QObject):

@@ -32,14 +32,17 @@ def get_yt_info_from_link(url: str):
         split_title = title.split("-")
         if len(split_title) < 2:
             title = split_title[0].strip()
+        elif len(split_title) > 2:
+            # keep title as is and use author as artist
+            pass
         else:
+            title = split_title[1].strip()
             temp_artist = split_title[0].strip()
             if artist == "":
                 artist = temp_artist
             elif artist != temp_artist and temp_artist != "":
                 # replace artist with filed to left of dash
                 artist = temp_artist
-            title = split_title[1].strip()
         
         # add the author if it's not the same as the artist
         if artist != info_artist and info_artist != "":
