@@ -114,11 +114,6 @@ class YtSingleController:
 class SingleDownloadWorkerSignals(QObject):
     """
     Defines the signals available from a running worker thread.
-
-    SINGLE DOWNLOAD SIGNALS
-    finished: No data
-    error: tuple (exctype, value, traceback.format_exc())
-    result: object data returned from processing, anything
     """
     download_started = pyqtSignal()
     original_song_download_started = pyqtSignal()
@@ -142,7 +137,6 @@ class SingleDownloadWorker(QRunnable):
         self.kwargs['osdf'] = self.signals.original_song_download_finished
         self.kwargs['scs'] = self.signals.song_conversion_started
         self.kwargs['scf'] = self.signals.song_conversion_finished
-
 
     @pyqtSlot()
     def run(self):
