@@ -1,6 +1,3 @@
-from .metadata_window_ui import Ui_MetadataWindow
-
-
 class MetadataPayload:
     def __init__(self, title: str, artist: str, album: str, year: str, genre: str, track: str, disc: str, comment: str):
         self.title = title
@@ -27,8 +24,3 @@ class MetadataPayload:
 
     def __hash__(self):
         return hash((self.title, self.artist, self.album, self.year, self.genre, self.track, self.disc, self.comment))
-
-    def makePayloadFromDict(self, metadata_dict: dict):
-        self.title = metadata_dict['title']
-        self.artist = metadata_dict['artist']
-        self

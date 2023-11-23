@@ -15,7 +15,7 @@ def get_yt_info_from_link(url: str):
     """
     Retrieves info for a YouTube link
         :param url: the YouTube video url
-        :returns: tuple of (title, artist, playlist)
+        :returns: list of tuple (title, artist)
     """
     try:
         yt = YouTube(url)

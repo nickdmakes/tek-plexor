@@ -3,10 +3,11 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import QThreadPool
 from PyQt6.QtWidgets import QFileDialog
 
-from tp_engine.yt_api import get_yt_info_from_link, download_single_audio, YTTitleRetrievalException
+from tp_engine.yt_api import get_yt_info_from_link, download_single_audio
 from tp_conversion.converter import convert
 from tp_interface.app import MainWindow
 from tp_interface.debug_logger import DebugLogger
+from tp_interface.shared.metadata.metadata_controller import MetadataController
 
 from .yt_download_worker import YtDownloadWorker, YtDownloadPayload
 from .yt_info_worker import YtInfoWorker
@@ -21,12 +22,16 @@ class YtDownloadController:
         self.threadpool = QThreadPool()
         self.setupUi()
         self.debugLogger = DebugLogger(self.mw.debugConsole)
+        self.metadataController = MetadataController(parent=self.mw)
 
     def connectSignalsSlots(self):
         self.mw.ytDownloadButton.clicked.connect(self.ytDownloadButtonClicked)
         self.mw.ytUrlInput.textChanged.connect(self.ytUrlInputChanged)
         self.mw.ytDestinationBrowseButton.clicked.connect(self.ytBrowseDestinationButtonClicked)
         self.mw.ytBitRateDial.valueChanged.connect(self.ytBitRateDialChanged)
+        self.mw.ytEditMetadataButton.clicked.connect(self.ytEditMetadataButtonClicked)
+        self.mw.ytTitleInput.textChanged.connect(self.ytTitleInputChanged)
+        self.mw.ytArtistInput.textChanged.connect(self.ytArtistInputChanged)
 
     def setupUi(self):
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
@@ -49,6 +54,19 @@ class YtDownloadController:
             self.debugLogger.errorLog("Error: Destination folder does not exist")
             valid = False
         return valid
+
+    def ytTitleInputChanged(self, text: str):
+        if not self.metadataController.mdPayloads:
+            return
+        self.metadataController.mdPayloads[0].title = text.strip()
+
+    def ytArtistInputChanged(self, text: str):
+        if not self.metadataController.mdPayloads:
+            return
+        self.metadataController.mdPayloads[0].artist = text.strip()
+
+    def ytEditMetadataButtonClicked(self):
+        self.metadataController.showMetadataWindow()
 
     def ytBitRateDialChanged(self, value):
         bit_rates = [96, 128, 192, 256, 320]
@@ -138,6 +156,7 @@ class YtDownloadController:
         if the title is found, split it and put the artist"""
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
         if text == "":
+            self.mw.ytEditMetadataButton.setEnabled(False)
             return
 
         worker = YtInfoWorker(self.ytInfo_fn, url=text.strip())
@@ -161,6 +180,8 @@ class YtDownloadController:
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/green_checkmark.png"))
         self.mw.statusbar.showMessage("YouTube video info retrieved")
         self.debugLogger.infoLog(f"Found metadata: {title} - {artist}")
+        self.metadataController.yt_info_to_payload(yt_info=[info])
+        self.mw.ytEditMetadataButton.setEnabled(True)
 
     def ytInfoRetrievalFinished(self):
         pass
@@ -168,3 +189,4 @@ class YtDownloadController:
     def ytInfoRetrievalError(self, error):
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/red_x.png"))
         self.mw.statusbar.clearMessage()
+        self.mw.ytEditMetadataButton.setEnabled(False)
