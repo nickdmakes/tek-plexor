@@ -3,7 +3,7 @@ from ffmpeg import FFmpeg, FFmpegError
 from mutagen.mp4 import MP4
 from mutagen.mp3 import EasyMP3 as MP3
 from mutagen.oggopus import OggOpus
-
+from utils.Utils import YtDownloadPayload as pl
 
 class AudioConversionException(Exception):
     """Raised when an audio conversion fails"""
@@ -63,13 +63,13 @@ def add_tags_ogg(file, title, artist):
 
 
 def add_tags(file, params: dict):
-    format = params["compression"]
-    if format == "m4a" or format == "mp4":
-        add_tags_mp4(file, params["title"], params["artist"])
-    elif format == "mp3":
-        add_tags_mp3(file, params["title"], params["artist"])
-    elif format == "ogg":
-        add_tags_ogg(file, params["title"], params["artist"])
+    format = params[pl.COMPRESSION]
+    if format == pl.M4A or format == pl.MP4:
+        add_tags_mp4(file, params[pl.TITLE], params[pl.ARTIST])
+    elif format == pl.MP3:
+        add_tags_mp3(file, params[pl.TITLE], params[pl.ARTIST])
+    elif format == pl.OGG:
+        add_tags_ogg(file, params[pl.TITLE], params[pl.ARTIST])
     else:
         raise AudioConversionException(f"Unsupported file format: {format}")
 
@@ -78,34 +78,35 @@ def convert(file: str, params: dict):
     base, ext = os.path.splitext(file)
     while os.path.splitext(base)[1] != "":
         base, ext = os.path.splitext(base)
-    conv_file = f"{base}.{params['compression']}"
+    conv_file = f"{base}.{params[pl.COMPRESSION]}"
     
     if os.path.exists(conv_file):
         raise FileExistsException(f"File already exists", conv_file)
     
-    encoder = EncoderMappings(params["compression"]).get_encoder()
-    bitrate = str(params["bitrate"]) + "k"
+    encoder = EncoderMappings(params[pl.COMPRESSION]).get_encoder()
+    bitrate = str(params[pl.BITRATE]) + "k"
     try:
         # "q:a": 2 is highest option, range is [0.1:2]
         # this is almost the same as b:a because aac will always be variable bitrate so even 320k b:a will be adjusted a little
         # q:a will override b:a so either use one or the other
+        # "b:a": bitrate, "cutoff": 20000
         ffmpeg = (
             FFmpeg()
             .option("y")
             .input(file)
             .output(
                 conv_file,
-                {"c:a": encoder, "b:a": bitrate},
+                {"c:a": encoder, "b:a": bitrate, "cutoff": 20000},
             )
         )
         ffmpeg.execute()
-        if params["delete_og"]:
+        if params[pl.DELETE_OG]:
             os.remove(file)
     except FFmpegError as e:
         raise AudioConversionException(e)
     
-    # TODO have an option in params to add tags or not
-    add_tags(conv_file, params)
+    if params[pl.ADD_TAGS]:
+        add_tags(conv_file, params)
 
 
 # converts a file to m4a and adds tags

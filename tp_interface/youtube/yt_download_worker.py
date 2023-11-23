@@ -2,59 +2,6 @@ import os, sys, traceback
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QRunnable
 from tp_conversion.converter import FileExistsException
 
-from ..app import MainWindow
-
-
-class YtDownloadPayload:
-    """Factory class for creating a snapshot payload for the YouTube download worker"""
-    def __init__(self, url: str = "", title: str = "", artist: str = "", conversion_enabled: bool = True,
-                 compression: str = "m4a", bitrate: int = 320, delete_og: bool = False, out_path: str = ""):
-        super().__init__()
-        self.url = url
-        self.title = title
-        self.artist = artist
-        self.conversion_enabled = conversion_enabled
-        self.compression = compression
-        self.bitrate = bitrate
-        self.delete_og = delete_og
-        self.out_path = out_path
-
-    def makePayload(self, main_window: MainWindow):
-        bit_rates = [96, 128, 192, 256, 320]
-
-        self.url = main_window.ytUrlInput.text().strip()
-        self.title = main_window.ytTitleInput.text().strip()
-        self.artist = main_window.ytArtistInput.text().strip()
-        self.conversion_enabled = main_window.ytConversionSettings.isChecked()
-        if main_window.ytCompressionRadioOgg.isChecked():
-            self.compression = "ogg"
-        elif main_window.ytCompressionRadioM4a.isChecked():
-            self.compression = "m4a"
-        elif main_window.ytCompressionRadioMp3.isChecked():
-            self.compression = "mp3"
-        elif main_window.ytCompressionRadioMp4.isChecked():
-            self.compression = "mp4"
-
-        # If FLAC is selected, bitrate is ignored (set to 0)
-        dial_position = main_window.ytBitRateDial.value()
-        self.bitrate = bit_rates[dial_position]
-
-        self.delete_og = main_window.ytConversionKeepOriginal.isChecked()
-        self.out_path = main_window.ytDestinationInput.text().strip()
-        return self
-
-    def toDict(self):
-        return {
-            "url": self.url,
-            "title": self.title,
-            "artist": self.artist,
-            "conversion_enabled": self.conversion_enabled,
-            "compression": self.compression,
-            "bitrate": self.bitrate,
-            "delete_og": self.delete_og,
-            "out_path": self.out_path
-        }
-
 
 class YtDownloadWorkerSignals(QObject):
     """
@@ -71,7 +18,7 @@ class YtDownloadWorkerSignals(QObject):
 
 
 class YtDownloadWorker(QRunnable):
-    def __init__(self, fn, payload: YtDownloadPayload, *args, **kwargs):
+    def __init__(self, fn, payload: dict, *args, **kwargs):
         super(YtDownloadWorker, self).__init__()
         # Store constructor arguments (re-used for processing)
         self.fn = fn
