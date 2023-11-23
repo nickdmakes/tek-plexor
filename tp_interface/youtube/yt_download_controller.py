@@ -22,7 +22,8 @@ class YtDownloadController:
         self.threadpool = QThreadPool()
         self.setupUi()
         self.debugLogger = DebugLogger(self.mw.debugConsole)
-        self.metadataController = MetadataController(parent=self.mw)
+        self.metadataController = MetadataController(parent=self.mw, md_title=self.mw.ytTitleInput,
+                                                     md_artist=self.mw.ytArtistInput)
 
     def connectSignalsSlots(self):
         self.mw.ytDownloadButton.clicked.connect(self.ytDownloadButtonClicked)

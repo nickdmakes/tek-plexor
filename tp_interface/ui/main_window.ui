@@ -201,8 +201,14 @@
                <property name="enabled">
                 <bool>false</bool>
                </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>edit</string>
+                <string>Edit</string>
                </property>
               </widget>
              </item>
@@ -689,7 +695,7 @@
      <x>0</x>
      <y>0</y>
      <width>980</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

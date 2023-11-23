@@ -84,8 +84,11 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
        <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+        <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel</set>
        </property>
       </widget>
      </item>

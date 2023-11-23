@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QMainWindow, QSpacerItem, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QMainWindow, QSpacerItem, QSizePolicy, QLineEdit
 
 from .metadata_window_ui import Ui_MetadataWindow
 from .metadata_row_ui import Ui_MetadataRow
@@ -19,8 +19,12 @@ class MetadataRow(QWidget, Ui_MetadataRow):
 
 
 class MetadataController:
-    def __init__(self, parent: QMainWindow = None):
+    def __init__(self, parent: QMainWindow = None, md_title: QLineEdit = None, md_artist: QLineEdit = None):
         super().__init__()
+        # References to the main window's title and artist inputs. They update when the metadata apply button is clicked
+        self.md_title = md_title
+        self.md_artist = md_artist
+        # Reference to the metadata UI window
         self.mdw = MetadataWindow(parent=parent)
         self.connectSignalsSlots()
         self.mdPayloads = list[MetadataPayload]()
@@ -36,7 +40,22 @@ class MetadataController:
         self.mdPayloads = list[MetadataPayload]()
 
     def connectSignalsSlots(self):
-        pass
+        self.mdw.mdApplyCancelBox.accepted.connect(self.mdApplyButtonClicked)
+        self.mdw.mdApplyCancelBox.rejected.connect(self.mdCancelButtonClicked)
+
+    def mdApplyButtonClicked(self):
+        for i in range(self.mdw.mdColumn.count()-1):
+            row = self.mdw.mdColumn.itemAt(i).widget()
+            self.mdPayloads[i].title = row.titleInput.text()
+            self.mdPayloads[i].artist = row.artistInput.text()
+
+        self.md_title.setText(self.mdPayloads[0].title)
+        self.md_artist.setText(self.mdPayloads[0].artist)
+
+        self.mdw.close()
+
+    def mdCancelButtonClicked(self):
+        self.mdw.close()
 
     def showMetadataWindow(self):
         self.mdw.show()
