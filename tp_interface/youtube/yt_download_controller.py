@@ -8,8 +8,9 @@ from tp_conversion.converter import convert
 from tp_interface.app import MainWindow
 from tp_interface.debug_logger import DebugLogger
 from tp_interface.shared.metadata.metadata_controller import MetadataController
+from utils.Utils import YtDownloadPayload as pl
 
-from .yt_download_worker import YtDownloadWorker, YtDownloadPayload
+from .yt_download_worker import YtDownloadWorker
 from .yt_info_worker import YtInfoWorker
 
 
@@ -37,24 +38,30 @@ class YtDownloadController:
     def setupUi(self):
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
 
-    def payloadValid(self, payload: YtDownloadPayload):
-        valid = True
-        if payload.url == "":
-            self.debugLogger.errorLog("Error: URL field is empty")
-            valid = False
-        if payload.title == "":
-            self.debugLogger.errorLog("Error: Title field is empty")
-            valid = False
-        if payload.artist == "":
-            self.debugLogger.errorLog("Error: Artist field is empty")
-            valid = False
-        if payload.out_path == "":
-            self.debugLogger.errorLog("Error: Destination field is empty")
-            valid = False
-        if not os.path.exists(payload.out_path):
-            self.debugLogger.errorLog("Error: Destination folder does not exist")
-            valid = False
-        return valid
+    def makePayload(self):
+        compression = ""
+        if self.mw.ytCompressionRadioOgg.isChecked():
+            compression = pl.OGG
+        elif self.mw.ytCompressionRadioM4a.isChecked():
+            compression = pl.M4A
+        elif self.mw.ytCompressionRadioMp4.isChecked():
+            compression = pl.MP4
+        elif self.mw.ytCompressionRadioMp3.isChecked():
+            compression = pl.MP3
+        
+        bitrate = pl.BIT_RATES[self.mw.ytBitRateDial.value()]
+        
+        payload = pl(
+            url=self.mw.ytUrlInput.text().strip(),
+            title=self.mw.ytTitleInput.text().strip(),
+            artist=self.mw.ytArtistInput.text().strip(),
+            conversion_enabled=self.mw.ytConversionSettings.isChecked(),
+            compression=compression,
+            bitrate=bitrate,
+            delete_og=self.mw.ytConversionKeepOriginal.isChecked(),
+            out_path=self.mw.ytDestinationInput.text().strip()
+        )
+        return payload
 
     def ytTitleInputChanged(self, text: str):
         if not self.metadataController.mdPayloads:
@@ -79,10 +86,13 @@ class YtDownloadController:
             self.mw.ytDestinationInput.setText(directory)
 
     def ytDownloadButtonClicked(self):
-        payload = YtDownloadPayload().makePayload(self.mw)
-        if not self.payloadValid(payload):
+        payload = self.makePayload()
+        valid, reason = payload.isValid()
+        if not valid:
+            self.debugLogger.errorLog(f"Error: {reason}")
             return
 
+        payload = payload.getPayload()
         worker = YtDownloadWorker(self.ytDownload_fn, payload=payload)
         worker.signals.download_started.connect(self.downloadStarted)
         worker.signals.original_song_download_started.connect(self.originalSongDownloadStarted)
@@ -94,18 +104,19 @@ class YtDownloadController:
         worker.signals.download_error.connect(self.downloadError)
         self.threadpool.start(worker)
 
-    def ytDownload_fn(self, osdsc, osdf, scs, scf, payload: YtDownloadPayload):
-        title = payload.title
-        artist = payload.artist
+    def ytDownload_fn(self, osdsc, osdf, scs, scf, payload: dict):
+        title = payload[pl.TITLE]
+        artist = payload[pl.ARTIST]
         filename = f'{title} - {artist}'
+        url = payload[pl.URL]
+        out_path = payload[pl.OUT_PATH]
         osdsc.emit()
         # download will add the correct extension to filename
-        out_file, filename = download_single_audio(url=payload.url, out_path=payload.out_path,
-                                                   filename=filename)
+        out_file, filename = download_single_audio(url=url, out_path=out_path, filename=filename)
         osdf.emit(filename)
-        if payload.conversion_enabled:
+        if payload[pl.CONVERSION_ENABLED]:
             scs.emit()
-            convert(out_file, payload.toDict())
+            convert(out_file, payload)
             scf.emit(filename)
 
     def downloadStarted(self):
