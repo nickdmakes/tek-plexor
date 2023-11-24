@@ -84,18 +84,24 @@
       </spacer>
      </item>
      <item>
-      <widget class="QDialogButtonBox" name="mdApplyCancelBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+      <widget class="QPushButton" name="mdCancelButton">
+       <property name="text">
+        <string>Cancel</string>
        </property>
-       <property name="layoutDirection">
-        <enum>Qt::RightToLeft</enum>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="mdApplyButton">
+       <property name="font">
+        <font>
+         <bold>false</bold>
+        </font>
        </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel</set>
+       <property name="text">
+        <string>Apply</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

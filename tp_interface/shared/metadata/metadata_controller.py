@@ -43,19 +43,22 @@ class MetadataController:
         self.mdPayloads = list[mp]()
 
     def connectSignalsSlots(self):
-        self.mdw.mdApplyCancelBox.accepted.connect(self.mdApplyButtonClicked)
-        self.mdw.mdApplyCancelBox.rejected.connect(self.mdCancelButtonClicked)
+        self.mdw.mdCancelButton.clicked.connect(self.mdCancelButtonClicked)
+        self.mdw.mdApplyButton.clicked.connect(self.mdApplyButtonClicked)
 
     def mdApplyButtonClicked(self):
-        for i in range(self.mdw.mdColumn.count()-1):
-            row = self.mdw.mdColumn.itemAt(i).widget()
-            self.mdPayloads[i].payload[mp.TITLE] = row.titleInput.text()
-            self.mdPayloads[i].payload[mp.ARTIST] = row.artistInput.text()
+        try:
+            for i in range(self.mdw.mdColumn.count()-1):
+                row = self.mdw.mdColumn.itemAt(i).widget()
+                self.mdPayloads[i].payload[mp.TITLE] = row.titleInput.text()
+                self.mdPayloads[i].payload[mp.ARTIST] = row.artistInput.text()
 
-        self.md_title.setText(self.mdPayloads[0].payload[mp.TITLE])
-        self.md_artist.setText(self.mdPayloads[0].payload[mp.ARTIST])
+            self.md_title.setText(self.mdPayloads[0].payload[mp.TITLE])
+            self.md_artist.setText(self.mdPayloads[0].payload[mp.ARTIST])
 
-        self.mdw.close()
+            self.mdw.close()
+        except Exception as e:
+            print(e)
 
     def mdCancelButtonClicked(self):
         self.mdw.close()

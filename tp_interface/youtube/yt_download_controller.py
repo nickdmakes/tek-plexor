@@ -28,7 +28,6 @@ class YtDownloadController:
                                                      md_artist=self.mw.ytArtistInput)
         self.download_process_state = (0, 0)
 
-
     def connectSignalsSlots(self):
         self.mw.ytDownloadButton.clicked.connect(self.ytDownloadButtonClicked)
         self.mw.ytUrlInput.textChanged.connect(self.ytUrlInputChanged)

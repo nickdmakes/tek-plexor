@@ -43,16 +43,16 @@ class Ui_MetadataWindow(object):
         self.Row_01.addWidget(self.mdNumberAudiosLabel)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.Row_01.addItem(spacerItem)
-        self.mdApplyCancelBox = QtWidgets.QDialogButtonBox(parent=MetadataWindow)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.mdApplyCancelBox.sizePolicy().hasHeightForWidth())
-        self.mdApplyCancelBox.setSizePolicy(sizePolicy)
-        self.mdApplyCancelBox.setLayoutDirection(QtCore.Qt.LayoutDirection.RightToLeft)
-        self.mdApplyCancelBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Apply|QtWidgets.QDialogButtonBox.StandardButton.Cancel)
-        self.mdApplyCancelBox.setObjectName("mdApplyCancelBox")
-        self.Row_01.addWidget(self.mdApplyCancelBox)
+        self.mdCancelButton = QtWidgets.QPushButton(parent=MetadataWindow)
+        self.mdCancelButton.setObjectName("mdCancelButton")
+        self.Row_01.addWidget(self.mdCancelButton)
+        self.mdApplyButton = QtWidgets.QPushButton(parent=MetadataWindow)
+        font = QtGui.QFont()
+        font.setBold(False)
+        self.mdApplyButton.setFont(font)
+        self.mdApplyButton.setDefault(True)
+        self.mdApplyButton.setObjectName("mdApplyButton")
+        self.Row_01.addWidget(self.mdApplyButton)
         self.verticalLayout.addLayout(self.Row_01)
 
         self.retranslateUi(MetadataWindow)
@@ -62,6 +62,8 @@ class Ui_MetadataWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MetadataWindow.setWindowTitle(_translate("MetadataWindow", "Metadata Editor"))
         self.mdNumberAudiosLabel.setText(_translate("MetadataWindow", "# songs"))
+        self.mdCancelButton.setText(_translate("MetadataWindow", "Cancel"))
+        self.mdApplyButton.setText(_translate("MetadataWindow", "Apply"))
 
 
 if __name__ == "__main__":
