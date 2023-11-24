@@ -166,6 +166,7 @@ class YtDownloadController:
         """change the status icon to green if the url is valid. Also,
         if the title is found, split it and put the artist"""
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
+        self.metadataController.clear_payloads()
         if text == "":
             self.mw.ytEditMetadataButton.setEnabled(False)
             return

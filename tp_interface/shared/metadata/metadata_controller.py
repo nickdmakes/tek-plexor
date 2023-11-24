@@ -67,8 +67,14 @@ class MetadataController:
         self.mdw.show()
 
         # Remove all widgets from the column
-        for i in reversed(range(self.mdw.mdColumn.count())):
-            self.mdw.mdColumn.removeItem(self.mdw.mdColumn.itemAt(i))
+        while self.mdw.mdColumn.count() > 1:
+            item = self.mdw.mdColumn.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        # delete the spacer item at the end of the column
+        self.mdw.mdColumn.removeItem(self.mdw.mdColumn.itemAt(0))
 
         self.mdw.mdNumberAudiosLabel.setText(f"{len(self.mdPayloads)} audios")
 
@@ -80,4 +86,5 @@ class MetadataController:
             row.artistInput.setText(metadata.payload[mp.ARTIST])
             self.mdw.mdColumn.addWidget(row)
 
+        # add spacer item at the end of the column
         self.mdw.mdColumn.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
