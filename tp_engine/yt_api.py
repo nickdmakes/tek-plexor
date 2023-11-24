@@ -1,4 +1,6 @@
-from pytube import YouTube
+from pytube import YouTube, Playlist
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 
 class YTAudioDownloadException(Exception):
@@ -11,46 +13,99 @@ class YTTitleRetrievalException(Exception):
     pass
 
 
+class YtInfoPayload:
+    """
+    Payload for YouTube video info
+        :param info: list of tuples containing (title, artist, url)
+        :param is_playlist: whether the info is for a playlist
+    """
+    def __init__(self, info: list[tuple[str, str, str]], is_playlist: bool):
+        self.info = info
+        self.is_playlist = is_playlist
+
+
 def get_yt_info_from_link(url: str):
     """
     Retrieves info for a YouTube link
         :param url: the YouTube video url
-        :returns: list of tuple (title, artist)
+        :returns: YTInfoPayload
     """
     try:
-        yt = YouTube(url)
-        info = yt.vid_info
-        info_title = info['videoDetails']['title'].strip()
-        info_artist = info['videoDetails']['author'].strip()
-        
-        author = yt.author.strip()
-        artist = author
-        if artist == "":
-            artist = info_artist
-        
-        title = yt.title.strip()
-        split_title = title.split("-")
-        if len(split_title) < 2:
-            title = split_title[0].strip()
-        elif len(split_title) > 2:
-            # keep title as is and use author as artist
-            pass
+        if "playlist" in url:
+            playlist = Playlist(url)
+            if not playlist.video_urls:
+                raise YTTitleRetrievalException("Couldn't retrieve any video urls from playlist")
+            playlist_videos = get_playlist_videos(playlist)
+            info_list = []
+            for title, author, info_artist, video_url in playlist_videos:
+                optimized_info = optimize_yt_info(title,
+                                                  author,
+                                                  info_artist=info_artist,
+                                                  url=video_url)
+                info_list.append(optimized_info)
+            return YtInfoPayload(info_list, True)
         else:
-            title = split_title[1].strip()
-            temp_artist = split_title[0].strip()
-            if artist == "":
-                artist = temp_artist
-            elif artist != temp_artist and temp_artist != "":
-                # replace artist with filed to left of dash
-                artist = temp_artist
-        
-        # add the author if it's not the same as the artist
-        if artist != info_artist and info_artist != "":
-            artist += f" ({info_artist})"
-        
-        return title, artist
+            yt = YouTube(url)
+            optimized_info = optimize_yt_info(yt.title,
+                                              yt.author,
+                                              yt.vid_info['videoDetails']['author'],
+                                              yt.watch_url)
+            return YtInfoPayload([optimized_info], False)
     except Exception as e:
         raise YTTitleRetrievalException(e)
+
+
+# asynchronous function to get video info. Called by get_playlist_videos
+def get_playlist_video_info_fn(url):
+    yt = YouTube(url)
+    return yt.title, yt.author, yt.vid_info['videoDetails']['author'], yt.watch_url
+
+
+# Parsing a Playlist object requires creating a new YouTube object for each video in the playlist.
+# This is slow, so we use a ThreadPoolExecutor to make it A LOT faster.
+def get_playlist_videos(playlist: Playlist):
+    start = time.time()
+    processes = []
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        for url in playlist.video_urls:
+            processes.append(executor.submit(get_playlist_video_info_fn, url))
+
+    video_titles = []
+    for task in as_completed(processes):
+        video_titles.append(task.result())
+
+    end = time.time()
+    print(f"Time elapsed: {end - start}")
+    return video_titles
+
+
+def optimize_yt_info(title: str, author: str, info_artist: str, url: str):
+    author = author.strip()
+    artist = author
+    if artist == "":
+        artist = info_artist
+
+    title = title.strip()
+    split_title = title.split("-")
+    if len(split_title) < 2:
+        title = split_title[0].strip()
+    elif len(split_title) > 2:
+        # keep title as is and use author as artist
+        pass
+    else:
+        title = split_title[1].strip()
+        temp_artist = split_title[0].strip()
+        if artist == "":
+            artist = temp_artist
+        elif artist != temp_artist and temp_artist != "":
+            # replace artist with filed to left of dash
+            artist = temp_artist
+
+    # add the author if it's not the same as the artist
+    if artist != info_artist and info_artist != "":
+        artist += f" ({info_artist})"
+
+    return title, artist, url
 
 
 def download_single_audio(url: str, filename: str, out_path="./"):

@@ -2,7 +2,8 @@ from PyQt6.QtWidgets import QWidget, QMainWindow, QSpacerItem, QSizePolicy, QLin
 
 from .metadata_window_ui import Ui_MetadataWindow
 from .metadata_row_ui import Ui_MetadataRow
-from .metadata_payload import MetadataPayload
+
+from utils.Utils import MetadataPayload as mp
 
 
 class MetadataWindow(QWidget, Ui_MetadataWindow):
@@ -27,17 +28,19 @@ class MetadataController:
         # Reference to the metadata UI window
         self.mdw = MetadataWindow(parent=parent)
         self.connectSignalsSlots()
-        self.mdPayloads = list[MetadataPayload]()
+        self.mdPayloads = list[mp]()
 
-    def yt_info_to_payload(self, yt_info: list[tuple[str, str]]):
+    def yt_info_to_payload(self, yt_info: list[tuple[str, str, str]]):
         self.clear_payloads()
         for info in yt_info:
-            payload = MetadataPayload(title=info[0], artist=info[1], album="", year="",
-                                      genre="", track="", disc="", comment="")
+            payload = mp()
+            payload.payload[mp.TITLE] = info[0]
+            payload.payload[mp.ARTIST] = info[1]
+            payload.payload[mp.URL] = info[2]
             self.mdPayloads.append(payload)
 
     def clear_payloads(self):
-        self.mdPayloads = list[MetadataPayload]()
+        self.mdPayloads = list[mp]()
 
     def connectSignalsSlots(self):
         self.mdw.mdApplyCancelBox.accepted.connect(self.mdApplyButtonClicked)
@@ -46,11 +49,11 @@ class MetadataController:
     def mdApplyButtonClicked(self):
         for i in range(self.mdw.mdColumn.count()-1):
             row = self.mdw.mdColumn.itemAt(i).widget()
-            self.mdPayloads[i].title = row.titleInput.text()
-            self.mdPayloads[i].artist = row.artistInput.text()
+            self.mdPayloads[i].payload[mp.TITLE] = row.titleInput.text()
+            self.mdPayloads[i].payload[mp.ARTIST] = row.artistInput.text()
 
-        self.md_title.setText(self.mdPayloads[0].title)
-        self.md_artist.setText(self.mdPayloads[0].artist)
+        self.md_title.setText(self.mdPayloads[0].payload[mp.TITLE])
+        self.md_artist.setText(self.mdPayloads[0].payload[mp.ARTIST])
 
         self.mdw.close()
 
@@ -66,12 +69,12 @@ class MetadataController:
 
         self.mdw.mdNumberAudiosLabel.setText(f"{len(self.mdPayloads)} audios")
 
-        for info in self.mdPayloads:
+        for metadata in self.mdPayloads:
             row = MetadataRow()
             # set indicator as index of row
-            row.identifierLabel.setText(f"{self.mdPayloads.index(info)+1}")
-            row.titleInput.setText(info.title)
-            row.artistInput.setText(info.artist)
+            row.identifierLabel.setText(f"{self.mdPayloads.index(metadata)+1}")
+            row.titleInput.setText(metadata.payload[mp.TITLE])
+            row.artistInput.setText(metadata.payload[mp.ARTIST])
             self.mdw.mdColumn.addWidget(row)
 
         self.mdw.mdColumn.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))

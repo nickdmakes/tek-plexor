@@ -1,8 +1,8 @@
 import os
 
+
 class YtDownloadPayload:
     # class/static variables for keys
-    URL = "url"
     TITLE = "title"
     ARTIST = "artist"
     CONVERSION_ENABLED = "conversion_enabled"
@@ -25,7 +25,6 @@ class YtDownloadPayload:
     
     def __init__(self):
         self.payload = {
-            self.URL: "",
             self.TITLE: "",
             self.ARTIST: "",
             self.CONVERSION_ENABLED: True,
@@ -36,10 +35,9 @@ class YtDownloadPayload:
             self.ADD_TAGS: True
         }
     
-    def __init__(self, url: str = "", title: str = "", artist: str = "", conversion_enabled: bool = True,
+    def __init__(self, title: str = "", artist: str = "", conversion_enabled: bool = True,
                  compression: str = M4A, bitrate: int = 320, delete_og: bool = False, out_path: str = ""):
         self.payload = {
-            self.URL: url,
             self.TITLE: title,
             self.ARTIST: artist,
             self.CONVERSION_ENABLED: conversion_enabled,
@@ -52,8 +50,6 @@ class YtDownloadPayload:
     
     def isValid(self):
         reason = ""
-        if self.payload[self.URL] == "":
-            reason += "URL field is empty"
         if self.payload[self.TITLE] == "":
             if reason != "":
                 reason += ", "
@@ -86,6 +82,7 @@ class YtDownloadPayload:
 
 class MetadataPayload:
     # class/static variables for keys
+    URL = "url"
     TITLE = "title"
     ARTIST = "artist"
     ALBUM = "album"
@@ -97,6 +94,7 @@ class MetadataPayload:
     
     def __init__(self):
         self.payload = {
+            self.URL: "",
             self.TITLE: "",
             self.ARTIST: "",
             self.ALBUM: "",
@@ -107,9 +105,10 @@ class MetadataPayload:
             self.COMMENT: ""
         }
     
-    def __init__(self, title: str = "", artist: str = "", album: str = "", year: str = "",
+    def __init__(self, url: str = "", title: str = "", artist: str = "", album: str = "", year: str = "",
                  genre: str = "", track: str = "", disc: str = "", comment: str = ""):
         self.payload = {
+            self.URL: url,
             self.TITLE: title,
             self.ARTIST: artist,
             self.ALBUM: album,
@@ -124,10 +123,9 @@ class MetadataPayload:
         return self.payload
     
     def __str__(self):
-        return f'MetadataPayload(title={self.payload[self.TITLE]}, artist={self.payload[self.ARTIST]}, ' \
-               f'album={self.payload[self.ALBUM]}, year={self.payload[self.YEAR]}, ' \
-               f'genre={self.payload[self.GENRE]}, track={self.payload[self.TRACK]}, ' \
-               f'disc={self.payload[self.DISC]}, comment={self.payload[self.COMMENT]})'
+        return f"MetadataPayload({self.payload[self.TITLE]}, {self.payload[self.ARTIST]}, " \
+               f"{self.payload[self.ALBUM]}, {self.payload[self.YEAR]}, {self.payload[self.GENRE]}, " \
+               f"{self.payload[self.TRACK]}, {self.payload[self.DISC]}, {self.payload[self.COMMENT]})"
     
     def __repr__(self):
         return self.__str__()
@@ -143,6 +141,6 @@ class MetadataPayload:
         return not self.__eq__(other)
     
     def __hash__(self):
-        return hash((self.payload[self.TITLE], self.payload[self.ARTIST], self.payload[self.ALBUM],
-                     self.payload[self.YEAR], self.payload[self.GENRE], self.payload[self.TRACK],
-                     self.payload[self.DISC], self.payload[self.COMMENT]))
+        return hash((self.payload[self.URL], self.payload[self.TITLE], self.payload[self.ARTIST],
+                     self.payload[self.ALBUM], self.payload[self.YEAR], self.payload[self.GENRE],
+                     self.payload[self.TRACK], self.payload[self.DISC], self.payload[self.COMMENT]))

@@ -3,12 +3,13 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import QThreadPool
 from PyQt6.QtWidgets import QFileDialog
 
-from tp_engine.yt_api import get_yt_info_from_link, download_single_audio
+from tp_engine.yt_api import get_yt_info_from_link, download_single_audio, YtInfoPayload
 from tp_conversion.converter import convert
 from tp_interface.app import MainWindow
 from tp_interface.debug_logger import DebugLogger
 from tp_interface.shared.metadata.metadata_controller import MetadataController
 from utils.Utils import YtDownloadPayload as pl
+from utils.Utils import MetadataPayload as mp
 
 from .yt_download_worker import YtDownloadWorker
 from .yt_info_worker import YtInfoWorker
@@ -25,6 +26,8 @@ class YtDownloadController:
         self.debugLogger = DebugLogger(self.mw.debugConsole)
         self.metadataController = MetadataController(parent=self.mw, md_title=self.mw.ytTitleInput,
                                                      md_artist=self.mw.ytArtistInput)
+        self.download_process_state = (0, 0)
+
 
     def connectSignalsSlots(self):
         self.mw.ytDownloadButton.clicked.connect(self.ytDownloadButtonClicked)
@@ -48,11 +51,10 @@ class YtDownloadController:
             compression = pl.MP4
         elif self.mw.ytCompressionRadioMp3.isChecked():
             compression = pl.MP3
-        
+
         bitrate = pl.BIT_RATES[self.mw.ytBitRateDial.value()]
-        
+
         payload = pl(
-            url=self.mw.ytUrlInput.text().strip(),
             title=self.mw.ytTitleInput.text().strip(),
             artist=self.mw.ytArtistInput.text().strip(),
             conversion_enabled=self.mw.ytConversionSettings.isChecked(),
@@ -66,12 +68,12 @@ class YtDownloadController:
     def ytTitleInputChanged(self, text: str):
         if not self.metadataController.mdPayloads:
             return
-        self.metadataController.mdPayloads[0].title = text.strip()
+        self.metadataController.mdPayloads[0].payload[mp.TITLE] = text.strip()
 
     def ytArtistInputChanged(self, text: str):
         if not self.metadataController.mdPayloads:
             return
-        self.metadataController.mdPayloads[0].artist = text.strip()
+        self.metadataController.mdPayloads[0].payload[mp.ARTIST] = text.strip()
 
     def ytEditMetadataButtonClicked(self):
         self.metadataController.showMetadataWindow()
@@ -86,14 +88,24 @@ class YtDownloadController:
             self.mw.ytDestinationInput.setText(directory)
 
     def ytDownloadButtonClicked(self):
-        payload = self.makePayload()
-        valid, reason = payload.isValid()
+        download_payload = self.makePayload()
+        valid, reason = download_payload.isValid()
         if not valid:
             self.debugLogger.errorLog(f"Error: {reason}")
             return
 
-        payload = payload.getPayload()
-        worker = YtDownloadWorker(self.ytDownload_fn, payload=payload)
+        self.debugLogger.infoLog("\n-------- PROCESS STARTED: YouTube yt Download -------")
+
+        self.download_process_state = (0, len(self.metadataController.mdPayloads))
+
+        for i, metadata_payload in enumerate(self.metadataController.mdPayloads):
+            worker = self.makeDownloadWorker(download_payload=download_payload.getPayload(),
+                                             metadata_payload=metadata_payload.getPayload())
+            self.threadpool.start(worker)
+
+    def makeDownloadWorker(self, download_payload: dict, metadata_payload: dict):
+        worker = YtDownloadWorker(self.ytDownload_fn, download_payload=download_payload,
+                                  metadata_payload=metadata_payload)
         worker.signals.download_started.connect(self.downloadStarted)
         worker.signals.original_song_download_started.connect(self.originalSongDownloadStarted)
         worker.signals.original_song_download_finished.connect(self.originalSongDownloadFinished)
@@ -102,42 +114,35 @@ class YtDownloadController:
         worker.signals.song_conversion_finished.connect(self.songConversionFinished)
         worker.signals.download_finished.connect(self.downloadFinished)
         worker.signals.download_error.connect(self.downloadError)
-        self.threadpool.start(worker)
+        return worker
 
-    def ytDownload_fn(self, osdsc, osdf, scs, scf, payload: dict):
-        title = payload[pl.TITLE]
-        artist = payload[pl.ARTIST]
+    def ytDownload_fn(self, osdsc, osdf, scs, scf, download_payload: dict, metadata_payload: dict):
+        title = metadata_payload[mp.TITLE]
+        artist = metadata_payload[mp.ARTIST]
         filename = f'{title} - {artist}'
-        url = payload[pl.URL]
-        out_path = payload[pl.OUT_PATH]
+        url = metadata_payload[mp.URL]
+        out_path = download_payload[pl.OUT_PATH]
         osdsc.emit()
         # download will add the correct extension to filename
         out_file, filename = download_single_audio(url=url, out_path=out_path, filename=filename)
         osdf.emit(filename)
-        if payload[pl.CONVERSION_ENABLED]:
+        if download_payload[pl.CONVERSION_ENABLED]:
             scs.emit()
-            convert(out_file, payload)
+            convert(out_file, download_payload, metadata_payload)
             scf.emit(filename)
 
     def downloadStarted(self):
         self.mw.ytDownloadButton.setEnabled(False)
-        self.mw.statusbar.showMessage("Download Started...")
-        self.debugLogger.infoLog("\n-------- PROCESS STARTED: YouTube yt Download -------")
-        self.mw.progressBar.setValue(5)
 
     def originalSongDownloadStarted(self):
-        self.debugLogger.infoLog(f'Fetching high quality audio from Youtube...')
-        self.mw.progressBar.setValue(30)
+        pass
 
     def originalSongDownloadFinished(self, filename):
-        self.mw.statusbar.showMessage("Downloaded song from YouTube")
         self.debugLogger.successLog(f'Downloaded {filename} from Youtube')
-        self.mw.progressBar.setValue(50)
 
     def songConversionStarted(self):
         self.mw.statusbar.showMessage("Converting audio codecs...")
         self.debugLogger.infoLog(f'Converting original codec...')
-        self.mw.progressBar.setValue(70)
 
     def songConversionFileExists(self, filenames):
         self.debugLogger.errorLog(f'File already exists: {filenames[0]}')
@@ -145,23 +150,19 @@ class YtDownloadController:
         self.debugLogger.errorLog(f"Press Download again to retry")
         self.mw.ytDownloadButton.setEnabled(True)
         self.mw.statusbar.showMessage("Download failed!")
-        self.mw.progressBar.setValue(0)
 
     def songConversionFinished(self, filename):
         self.debugLogger.successLog(f'Successfully converted {filename}')
-        self.mw.progressBar.setValue(90)
 
     def downloadFinished(self):
-        self.mw.statusbar.showMessage("Download successful!")
         self.mw.ytDownloadButton.setEnabled(True)
-        self.mw.progressBar.setValue(100)
-        self.debugLogger.infoLog("-------- PROCESS COMPLETE: YouTube yt Download -------\n")
+        self.download_process_state = (self.download_process_state[0] + 1, self.download_process_state[1])
+        self.mw.progressBar.setValue(int((self.download_process_state[0] / self.download_process_state[1]) * 100))
 
     def downloadError(self, error):
         self.debugLogger.errorLog(f"Error: {error[1]}")
         self.mw.statusbar.showMessage("Download failed!")
         self.mw.ytDownloadButton.setEnabled(True)
-        self.mw.progressBar.setValue(0)
 
     def ytUrlInputChanged(self, text: str):
         """change the status icon to green if the url is valid. Also,
@@ -179,20 +180,24 @@ class YtDownloadController:
         self.threadpool.start(worker)
 
     def ytInfo_fn(self, url):
-        title, artist = get_yt_info_from_link(url=url)
-        return title, artist
+        return get_yt_info_from_link(url=url)
 
     def ytInfoRetrievalStarted(self):
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
 
-    def ytInfoRetrievalResult(self, info):
-        title, artist = info
-        self.mw.ytTitleInput.setText(title)
-        self.mw.ytArtistInput.setText(artist)
+    def ytInfoRetrievalResult(self, info: YtInfoPayload):
+        first_title = info.info[0][0]
+        first_artist = info.info[0][1]
+
+        if info.is_playlist:
+            self.debugLogger.infoLog(f"Found YouTube playlist: {len(info.info)} songs found")
+        else:
+            self.debugLogger.infoLog(f"Found YouTube song: {first_title} - {first_artist}")
+
+        self.mw.ytTitleInput.setText(first_title)
+        self.mw.ytArtistInput.setText(first_artist)
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/green_checkmark.png"))
-        self.mw.statusbar.showMessage("YouTube video info retrieved")
-        self.debugLogger.infoLog(f"Found metadata: {title} - {artist}")
-        self.metadataController.yt_info_to_payload(yt_info=[info])
+        self.metadataController.yt_info_to_payload(yt_info=info.info)
         self.mw.ytEditMetadataButton.setEnabled(True)
 
     def ytInfoRetrievalFinished(self):

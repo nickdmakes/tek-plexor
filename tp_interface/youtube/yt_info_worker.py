@@ -1,6 +1,6 @@
 import sys, traceback
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QRunnable
-from tp_engine.yt_api import YTTitleRetrievalException
+from tp_engine.yt_api import YTTitleRetrievalException, YtInfoPayload
 
 
 class YtInfoWorkerSignals(QObject):
@@ -8,7 +8,7 @@ class YtInfoWorkerSignals(QObject):
     Defines the signals available from a running worker thread.
     """
     retrieval_started = pyqtSignal()
-    retrieval_result = pyqtSignal(tuple)
+    retrieval_result = pyqtSignal(YtInfoPayload)
     retrieval_finished = pyqtSignal()
     retrieval_error = pyqtSignal(tuple)
 

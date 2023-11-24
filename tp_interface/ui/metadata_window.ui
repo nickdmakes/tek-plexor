@@ -35,6 +35,9 @@
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>0</number>
+       </property>
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -48,7 +51,11 @@
         <number>0</number>
        </property>
        <item>
-        <layout class="QVBoxLayout" name="mdColumn"/>
+        <layout class="QVBoxLayout" name="mdColumn">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+        </layout>
        </item>
       </layout>
      </widget>
