@@ -140,7 +140,7 @@ class YtDownloadController:
         self.debugLogger.successLog(f'Downloaded {filename} from Youtube')
 
     def songConversionStarted(self):
-        self.debugLogger.infoLog(f'Converting original codec...')
+        pass
 
     def songConversionFileExists(self, filenames):
         self.debugLogger.errorLog(f'File already exists: {filenames[0]}')

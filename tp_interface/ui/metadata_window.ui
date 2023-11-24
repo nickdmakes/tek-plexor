@@ -20,6 +20,12 @@
    <string>Metadata Editor</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <property name="topMargin">
+    <number>8</number>
+   </property>
    <item>
     <widget class="QScrollArea" name="mdScroll">
      <property name="widgetResizable">
@@ -31,7 +37,7 @@
         <x>0</x>
         <y>0</y>
         <width>794</width>
-        <height>284</height>
+        <height>294</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
