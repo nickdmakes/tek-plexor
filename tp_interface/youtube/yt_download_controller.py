@@ -141,7 +141,6 @@ class YtDownloadController:
         self.debugLogger.successLog(f'Downloaded {filename} from Youtube')
 
     def songConversionStarted(self):
-        self.mw.statusbar.showMessage("Converting audio codecs...")
         self.debugLogger.infoLog(f'Converting original codec...')
 
     def songConversionFileExists(self, filenames):
