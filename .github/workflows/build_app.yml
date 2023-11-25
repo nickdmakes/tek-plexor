@@ -4,7 +4,7 @@ on:
     branches:
       - main
 jobs:
-  environment-setup:
+  build-macos-exe:
     runs-on: macos-latest
     steps:
       - name: Check out repository
@@ -22,13 +22,15 @@ jobs:
         run: >
           poetry config virtualenvs.create false &&
           poetry install --no-interaction --no-root
-      - name: Run ls
+      - name: Make App Executable Directory
         run: >
-          ls
+          mkdir -p excecutables/
       - name: Create Executable
         uses: sayyid5416/pyinstaller@v1
         with:
           python_ver: '3.11'
           spec: 'main.py'
-          upload_exe_with_name: 'My executable'
-          options: --onefile, --name "My App", --windowed, 
+          upload_exe_with_name: 'tek-plexor-osx'
+          options: --onefile, --name "TekPlexor", --windowed
+      - name: See Directory
+        run: ls
