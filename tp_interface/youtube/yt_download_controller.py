@@ -1,4 +1,5 @@
-import os
+import time
+from datetime import datetime
 from PyQt6 import QtGui
 from PyQt6.QtCore import QThreadPool
 from PyQt6.QtWidgets import QFileDialog
@@ -15,6 +16,42 @@ from .yt_download_worker import YtDownloadWorker
 from .yt_info_worker import YtInfoWorker
 
 
+# class that contains the current state of the download process
+# It is used to update the progress bar and also to know when the download is finished
+# It should get stats for the download process like time elapsed
+class YtDownloadState:
+    def __init__(self, n_processes: int, nuggets: int = 1):
+        self.n_processes = n_processes
+        self.n_download_failed = 0
+        self.n_conversions_failed = 0
+        self.n_nuggets = n_processes * nuggets
+        self.nuggets_completed = 0
+        self.start_time = time.time()
+
+    def complete_nugget(self, n: int = 1):
+        self.nuggets_completed += n
+
+    def increment_download_failed(self):
+        self.n_download_failed += 1
+
+    def increment_conversion_failed(self):
+        self.n_conversions_failed += 1
+
+    def are_nuggets_done(self):
+        return self.nuggets_completed == self.n_nuggets
+
+    def get_stats_str(self):
+        n_success = self.n_processes - self.n_download_failed
+        # get elapsed time. Use datetime to format it as 00:00.00
+        # round to 2 decimal places
+        elapsed_time = datetime.fromtimestamp(time.time() - self.start_time).strftime("%M:%S.%f")[:-4]
+
+        downloads_ratio = f"{self.n_processes-self.n_download_failed}/{self.n_processes}"
+        conversions_ratio = f"{(self.n_processes-self.n_download_failed)-self.n_conversions_failed}/{self.n_processes-self.n_download_failed}"
+
+        return f"downloads: {downloads_ratio}\nconversions: {conversions_ratio}\nerrors: {self.n_download_failed + self.n_conversions_failed}\nTime elapsed: {elapsed_time}"
+
+
 # contains a reference QmainWindow object for the main window of the application
 class YtDownloadController:
     def __init__(self, main_window: MainWindow):
@@ -26,7 +63,7 @@ class YtDownloadController:
         self.debugLogger = DebugLogger(self.mw.debugConsole)
         self.metadataController = MetadataController(parent=self.mw, md_title=self.mw.ytTitleInput,
                                                      md_artist=self.mw.ytArtistInput)
-        self.download_process_state = (0, 0)
+        self.downloadState = YtDownloadState(n_processes=0)
 
     def connectSignalsSlots(self):
         self.mw.ytDownloadButton.clicked.connect(self.ytDownloadButtonClicked)
@@ -39,6 +76,9 @@ class YtDownloadController:
 
     def setupUi(self):
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
+
+    def update_progress_bar(self):
+        self.mw.progressBar.setValue(int(self.downloadState.nuggets_completed / self.downloadState.n_nuggets * 100))
 
     def makePayload(self):
         compression = ""
@@ -95,7 +135,7 @@ class YtDownloadController:
 
         self.debugLogger.infoLog("\n-------- PROCESS STARTED: YouTube yt Download -------")
 
-        self.download_process_state = (0, len(self.metadataController.mdPayloads))
+        self.downloadState = YtDownloadState(n_processes=len(self.metadataController.mdPayloads), nuggets=2)
 
         for i, metadata_payload in enumerate(self.metadataController.mdPayloads):
             worker = self.makeDownloadWorker(download_payload=download_payload.getPayload(),
@@ -108,9 +148,12 @@ class YtDownloadController:
         worker.signals.download_started.connect(self.downloadStarted)
         worker.signals.original_song_download_started.connect(self.originalSongDownloadStarted)
         worker.signals.original_song_download_finished.connect(self.originalSongDownloadFinished)
+        worker.signals.original_song_download_error.connect(self.originalSongDownloadError)
         worker.signals.song_conversion_started.connect(self.songConversionStarted)
-        worker.signals.song_conversion_file_exists.connect(self.songConversionFileExists)
+        worker.signals.song_conversion_file_exists_error.connect(self.songConversionFileExists)
         worker.signals.song_conversion_finished.connect(self.songConversionFinished)
+        worker.signals.song_conversion_error.connect(self.songConversionError)
+        worker.signals.download_result.connect(self.downloadResult)
         worker.signals.download_finished.connect(self.downloadFinished)
         worker.signals.download_error.connect(self.downloadError)
         return worker
@@ -134,28 +177,48 @@ class YtDownloadController:
         self.mw.ytDownloadButton.setEnabled(False)
 
     def originalSongDownloadStarted(self):
+        self.mw.statusbar.showMessage("Downloading...")
         pass
 
     def originalSongDownloadFinished(self, filename):
+        self.downloadState.complete_nugget()
         self.debugLogger.successLog(f'Downloaded {filename} from Youtube')
+        self.update_progress_bar()
+
+    def originalSongDownloadError(self, error):
+        self.downloadState.increment_download_failed()
+        self.downloadState.complete_nugget(n=2)
+        self.debugLogger.errorLog(f'Error: {error[1]}')
 
     def songConversionStarted(self):
-        pass
+        self.mw.statusbar.showMessage("Converting...")
 
     def songConversionFileExists(self, filenames):
+        self.downloadState.increment_conversion_failed()
+        self.downloadState.complete_nugget()
         self.debugLogger.errorLog(f'File already exists: {filenames[0]}')
-        self.debugLogger.errorLog(f'File renamed to {filenames[1]}')
-        self.debugLogger.errorLog(f"Press Download again to retry")
-        self.mw.ytDownloadButton.setEnabled(True)
-        self.mw.statusbar.showMessage("Download failed!")
+        self.debugLogger.warningLog(f'File renamed to {filenames[1].split("/")[-1]}')
 
     def songConversionFinished(self, filename):
+        self.downloadState.complete_nugget()
         self.debugLogger.successLog(f'Successfully converted {filename}')
+        self.update_progress_bar()
+
+    def songConversionError(self, error):
+        self.downloadState.increment_conversion_failed()
+        self.downloadState.complete_nugget()
+        self.debugLogger.errorLog(f'Error: {error[1]}')
+
+    def downloadResult(self):
+        pass
 
     def downloadFinished(self):
-        self.mw.ytDownloadButton.setEnabled(True)
-        self.download_process_state = (self.download_process_state[0] + 1, self.download_process_state[1])
-        self.mw.progressBar.setValue(int((self.download_process_state[0] / self.download_process_state[1]) * 100))
+        if self.downloadState.are_nuggets_done():
+            self.debugLogger.infoLog(self.downloadState.get_stats_str())
+            self.debugLogger.infoLog("-------- PROCESS FINISHED: YouTube yt Download -------")
+            self.mw.ytDownloadButton.setEnabled(True)
+            self.mw.statusbar.showMessage("Download finished!")
+        self.update_progress_bar()
 
     def downloadError(self, error):
         self.debugLogger.errorLog(f"Error: {error[1]}")

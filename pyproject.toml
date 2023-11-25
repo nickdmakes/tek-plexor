@@ -7,12 +7,13 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "<3.13,>=3.8"
 python-ffmpeg = "^2.0.4"
 pyqt6 = "^6.4"
 pytube = "^15.0.0"
 pyqt6-tools = "^6.4.2.3.3"
 mutagen = "^1.47.0"
+pyinstaller = "^6.2.0"
 
 
 [build-system]

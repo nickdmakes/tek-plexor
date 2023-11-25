@@ -1,6 +1,7 @@
 import os, sys, traceback
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QRunnable
-from tp_conversion.converter import FileExistsException
+from tp_conversion.converter import FileExistsException, AudioConversionException
+from tp_engine.yt_api import YTAudioDownloadException
 
 
 class YtDownloadWorkerSignals(QObject):
@@ -10,9 +11,12 @@ class YtDownloadWorkerSignals(QObject):
     download_started = pyqtSignal()
     original_song_download_started = pyqtSignal()
     original_song_download_finished = pyqtSignal(str)
+    original_song_download_error = pyqtSignal(tuple)
     song_conversion_started = pyqtSignal()
-    song_conversion_file_exists = pyqtSignal(tuple)
+    song_conversion_file_exists_error = pyqtSignal(tuple)
     song_conversion_finished = pyqtSignal(str)
+    song_conversion_error = pyqtSignal(tuple)
+    download_result = pyqtSignal()
     download_finished = pyqtSignal()
     download_error = pyqtSignal(tuple)
 
@@ -41,13 +45,23 @@ class YtDownloadWorker(QRunnable):
             self.fn(
                 *self.args, **self.kwargs
             )
+        except YTAudioDownloadException:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.original_song_download_error.emit((exctype, value, traceback.format_exc()))
         except FileExistsException as e:
             # rename file with .bak extension
             os.rename(e.filename, f'{e.filename}.bak')
-            self.signals.song_conversion_file_exists.emit((e.filename, f'{e.filename}.bak'))
+            self.signals.song_conversion_file_exists_error.emit((e.filename, f'{e.filename}.bak'))
+        except AudioConversionException:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.song_conversion_error.emit((exctype, value, traceback.format_exc()))
         except Exception as e:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
             self.signals.download_error.emit((exctype, value, traceback.format_exc()))
         else:
+            self.signals.download_result.emit()
+        finally:
             self.signals.download_finished.emit()

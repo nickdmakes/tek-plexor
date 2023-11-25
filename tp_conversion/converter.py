@@ -6,6 +6,7 @@ from mutagen.oggopus import OggOpus
 from utils.Utils import YtDownloadPayload as pl
 from utils.Utils import MetadataPayload as mp
 
+
 class AudioConversionException(Exception):
     """Raised when an audio conversion fails"""
     pass
