@@ -20,5 +20,5 @@ jobs:
           installer-parallel: true
       - name: Install dependencies
         run: >
-          poetry config settings.virtualenvs.create false &&
+          poetry config virtualenvs.create false &&
           poetry install --no-interaction --no-root
