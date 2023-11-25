@@ -32,5 +32,8 @@ jobs:
           spec: 'main.py'
           upload_exe_with_name: 'tek-plexor-osx'
           options: --onefile, --name "TekPlexor", --windowed
-      - name: See Directory
-        run: ls
+      - name: Add Executable to Artifact Directory
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-executable
+          path: dist/main.exe
