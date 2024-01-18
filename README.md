@@ -129,8 +129,8 @@ See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Nick Matthews - nickd.mf7@gmail.com  
-Soma Szabo - [soma emaio]
+Nick Matthews - nickd.mf7@gmail.com 
+Soma Szabo - soma.szabo15@gmail.com 
 
 Project Link: [https://github.com/dj-devtek/tek-plexor](https://github.com/dj-devtek/tek-plexor)
 
