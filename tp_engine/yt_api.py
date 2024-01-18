@@ -1,5 +1,6 @@
 from pytube import YouTube, Playlist
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from multiprocessing import cpu_count
 import time
 
 
@@ -66,7 +67,7 @@ def get_playlist_video_info_fn(url):
 def get_playlist_videos(playlist: Playlist):
     start = time.time()
     processes = []
-    with ThreadPoolExecutor(max_workers=20) as executor:
+    with ThreadPoolExecutor(max_workers=cpu_count()-1) as executor:
         for url in playlist.video_urls:
             processes.append(executor.submit(get_playlist_video_info_fn, url))
 

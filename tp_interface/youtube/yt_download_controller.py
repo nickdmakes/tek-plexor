@@ -3,13 +3,15 @@ from datetime import datetime
 from PyQt6 import QtGui
 from PyQt6.QtCore import QThreadPool
 from PyQt6.QtWidgets import QFileDialog
+from multiprocessing import cpu_count
+from pathvalidate import sanitize_filename
 
 from tp_engine.yt_api import get_yt_info_from_link, download_single_audio, YtInfoPayload
 from tp_conversion.converter import convert
 from tp_interface.app import MainWindow
 from tp_interface.debug_logger import DebugLogger
 from tp_interface.shared.metadata.metadata_controller import MetadataController
-from utils.Utils import YtDownloadPayload as pl
+from utils.Utils import YtDownloadPayload as dp
 from utils.Utils import MetadataPayload as mp
 
 from .yt_download_worker import YtDownloadWorker
@@ -59,6 +61,7 @@ class YtDownloadController:
         self.mw = main_window
         self.connectSignalsSlots()
         self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(cpu_count()-1)
         self.setupUi()
         self.debugLogger = DebugLogger(self.mw.debugConsole)
         self.metadataController = MetadataController(parent=self.mw, md_title=self.mw.ytTitleInput,
@@ -83,19 +86,17 @@ class YtDownloadController:
     def makePayload(self):
         compression = ""
         if self.mw.ytCompressionRadioOgg.isChecked():
-            compression = pl.OGG
+            compression = dp.OGG
         elif self.mw.ytCompressionRadioM4a.isChecked():
-            compression = pl.M4A
+            compression = dp.M4A
         elif self.mw.ytCompressionRadioMp4.isChecked():
-            compression = pl.MP4
+            compression = dp.MP4
         elif self.mw.ytCompressionRadioMp3.isChecked():
-            compression = pl.MP3
+            compression = dp.MP3
 
-        bitrate = pl.BIT_RATES[self.mw.ytBitRateDial.value()]
+        bitrate = dp.BIT_RATES[self.mw.ytBitRateDial.value()]
 
-        payload = pl(
-            title=self.mw.ytTitleInput.text().strip(),
-            artist=self.mw.ytArtistInput.text().strip(),
+        payload = dp(
             conversion_enabled=self.mw.ytConversionSettings.isChecked(),
             compression=compression,
             bitrate=bitrate,
@@ -118,8 +119,7 @@ class YtDownloadController:
         self.metadataController.showMetadataWindow()
 
     def ytBitRateDialChanged(self, value):
-        bit_rates = [96, 128, 192, 256, 320]
-        self.mw.ytBitRateLabel.setText(f"{bit_rates[value]} kbps")
+        self.mw.ytBitRateLabel.setText(f"{dp.BIT_RATES[value]} kbps")
 
     def ytBrowseDestinationButtonClicked(self):
         directory = QFileDialog.getExistingDirectory(self.mw, "Select a Destination Folder")
@@ -161,14 +161,14 @@ class YtDownloadController:
     def ytDownload_fn(self, osdsc, osdf, scs, scf, download_payload: dict, metadata_payload: dict):
         title = metadata_payload[mp.TITLE]
         artist = metadata_payload[mp.ARTIST]
-        filename = f'{title} - {artist}'
+        filename = sanitize_filename(f'{title} - {artist}')
         url = metadata_payload[mp.URL]
-        out_path = download_payload[pl.OUT_PATH]
+        out_path = download_payload[dp.OUT_PATH]
         osdsc.emit()
         # download will add the correct extension to filename
         out_file, filename = download_single_audio(url=url, out_path=out_path, filename=filename)
         osdf.emit(filename)
-        if download_payload[pl.CONVERSION_ENABLED]:
+        if download_payload[dp.CONVERSION_ENABLED]:
             scs.emit()
             convert(out_file, download_payload, metadata_payload)
             scf.emit(filename)

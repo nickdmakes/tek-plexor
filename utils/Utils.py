@@ -3,8 +3,6 @@ import os
 
 class YtDownloadPayload:
     # class/static variables for keys
-    TITLE = "title"
-    ARTIST = "artist"
     CONVERSION_ENABLED = "conversion_enabled"
     COMPRESSION = "compression"
     BITRATE = "bitrate"
@@ -25,8 +23,6 @@ class YtDownloadPayload:
     
     def __init__(self):
         self.payload = {
-            self.TITLE: "",
-            self.ARTIST: "",
             self.CONVERSION_ENABLED: True,
             self.COMPRESSION: self.M4A,
             self.BITRATE: 320,
@@ -38,8 +34,6 @@ class YtDownloadPayload:
     def __init__(self, title: str = "", artist: str = "", conversion_enabled: bool = True,
                  compression: str = M4A, bitrate: int = 320, delete_og: bool = False, out_path: str = ""):
         self.payload = {
-            self.TITLE: title,
-            self.ARTIST: artist,
             self.CONVERSION_ENABLED: conversion_enabled,
             self.COMPRESSION: compression,
             self.BITRATE: bitrate,
@@ -50,14 +44,6 @@ class YtDownloadPayload:
     
     def isValid(self):
         reason = ""
-        if self.payload[self.TITLE] == "":
-            if reason != "":
-                reason += ", "
-            reason += "Title field is empty"
-        if self.payload[self.ARTIST] == "":
-            if reason != "":
-                reason += ", "
-            reason += "Artist field is empty"
         if self.payload[self.OUT_PATH] == "":
             if reason != "":
                 reason += ", "
