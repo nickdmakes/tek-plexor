@@ -24,7 +24,7 @@ jobs:
           poetry install --no-interaction --no-root
       - name: Create Executable
         run: >
-          pyinstaller --onefile --windowed main.py -n tek_plexor.exe
+          pyinstaller --onefile --windowed main.py -n tek_plexor
       - name: see dir
         run: >
           cd dist && ls
@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: macos-executable
-          path: dist/tek_plexor.exe
+          path: dist/
