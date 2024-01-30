@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: macos-executable
-          path: dist/main
+          path: dist/tek_plexor.exe
