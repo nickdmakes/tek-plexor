@@ -24,7 +24,7 @@ jobs:
           poetry install --no-interaction --no-root
       - name: Create Executable
         run: >
-          pyinstaller --onefile --windowed main.py
+          pyinstaller --onefile --windowed main.py -n tek_plexor.exe
       - name: see dir
         run: >
           cd dist && ls
