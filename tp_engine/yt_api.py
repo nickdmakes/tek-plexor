@@ -1,6 +1,8 @@
-from pytube import YouTube, Playlist
+# from pytube import YouTube, Playlist
+from pytubefix import YouTube, Playlist
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
+from pathvalidate import sanitize_filename
 import time
 
 
@@ -121,6 +123,7 @@ def download_single_audio(url: str, filename: str, out_path="./"):
         stream = all_streams.first()
         ext = stream.subtype
         filename += f".{ext}"
+        filename = sanitize_filename(filename)
         return stream.download(filename=filename, output_path=out_path, skip_existing=True), filename
     except Exception as e:
         raise YTAudioDownloadException(e)
