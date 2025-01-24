@@ -51,6 +51,9 @@ to bring out the best sound.
 * PyQt6
 * PyTube
 
+## User Interface
+![TekPlexor UI](public/tek-plexor-ui.png)
+
 
 <!-- GETTING STARTED -->
 ## Getting Started - Development
