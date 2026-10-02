@@ -7,16 +7,14 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "<3.13,>=3.8"
-python-ffmpeg = "^2.0.4"
-pyqt6 = "^6.4"
+python = ">=3.10,<3.13"
+python-ffmpeg = "^2.0.12"
+pyqt6 = "^6.9.1"
 #pytube = "^15.0.0"
-pytubefix = "^8.8.5"
-pyqt6-tools = "^6.4.2.3.3"
+pytubefix = "^11.2.0"
 mutagen = "^1.47.0"
-pyinstaller = "^6.2.0"
-pathvalidate = "^3.2.0"
-
+pyinstaller = "^6.15.0"
+pathvalidate = "^3.3.1"
 
 [build-system]
 requires = ["poetry-core"]

@@ -140,12 +140,17 @@ def convert_to_m4a(in_file: str, title: str, artist: str, delete_in_file: bool =
     add_tags_mp4(conv_file, title, artist)
 
 
-# function to convert opus to m4a
+# Compatibility helper; pass paths as arguments rather than shell commands.
 def opus_to_m4a_cmd(in_file: str, out_file: str, delete_in_file: bool = True):
+    if Path(out_file).exists():
+        raise FileExistsException("File already exists", out_file)
     try:
-        cmd = f'ffmpeg -y -i {in_file} -c:a libfdk_aac -vbr 5 -cutoff 18000 {out_file}'
-        os.system(cmd)
+        # FFmpeg builds on supported platforms include the native AAC encoder.
+        # No shell is invoked, so untrusted filenames remain literal arguments.
+        FFmpeg().option("n").input(in_file).output(
+            out_file, {"c:a": "aac", "b:a": "320k"}
+        ).execute()
         if delete_in_file:
             os.remove(in_file)
-    except Exception as e:
-        raise AudioConversionException(e)
+    except (FFmpegError, OSError) as e:
+        raise AudioConversionException(e) from e

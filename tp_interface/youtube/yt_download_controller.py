@@ -24,6 +24,7 @@ from .yt_info_worker import YtInfoWorker
 class YtDownloadState:
     def __init__(self, n_processes: int, nuggets: int = 1):
         self.n_processes = n_processes
+        self.n_finished = 0
         self.n_download_failed = 0
         self.n_conversions_failed = 0
         self.n_nuggets = n_processes * nuggets
@@ -59,9 +60,10 @@ class YtDownloadController:
     def __init__(self, main_window: MainWindow):
         super().__init__()
         self.mw = main_window
+        self._retrieval_id = 0
         self.connectSignalsSlots()
         self.threadpool = QThreadPool()
-        self.threadpool.setMaxThreadCount(cpu_count()-1)
+        self.threadpool.setMaxThreadCount(max(1, min(4, cpu_count()-1)))
         self.setupUi()
         self.debugLogger = DebugLogger(self.mw.debugConsole)
         self.metadataController = MetadataController(parent=self.mw, md_title=self.mw.ytTitleInput,
@@ -79,9 +81,10 @@ class YtDownloadController:
 
     def setupUi(self):
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
+        self.mw.ytDownloadButton.setEnabled(False)
 
     def update_progress_bar(self):
-        self.mw.progressBar.setValue(int(self.downloadState.nuggets_completed / self.downloadState.n_nuggets * 100))
+        self.mw.progressBar.setValue(int(self.downloadState.nuggets_completed / max(1, self.downloadState.n_nuggets) * 100))
 
     def makePayload(self):
         compression = ""
@@ -127,6 +130,9 @@ class YtDownloadController:
             self.mw.ytDestinationInput.setText(directory)
 
     def ytDownloadButtonClicked(self):
+        if not self.metadataController.mdPayloads:
+            self.debugLogger.errorLog("Load a YouTube video or playlist before downloading")
+            return
         download_payload = self.makePayload()
         valid, reason = download_payload.isValid()
         if not valid:
@@ -135,7 +141,11 @@ class YtDownloadController:
 
         self.debugLogger.infoLog("\n-------- PROCESS STARTED: YouTube yt Download -------")
 
-        self.downloadState = YtDownloadState(n_processes=len(self.metadataController.mdPayloads), nuggets=2)
+        self.downloadState = YtDownloadState(n_processes=len(self.metadataController.mdPayloads), nuggets=2 if download_payload.payload[dp.CONVERSION_ENABLED] else 1)
+        self.mw.progressBar.setValue(0)
+        self.mw.ytDownloadButton.setEnabled(False)
+        self.mw.ytUrlInput.setEnabled(False)
+        self.mw.ytEditMetadataButton.setEnabled(False)
 
         for i, metadata_payload in enumerate(self.metadataController.mdPayloads):
             worker = self.makeDownloadWorker(download_payload=download_payload.getPayload(),
@@ -187,7 +197,7 @@ class YtDownloadController:
 
     def originalSongDownloadError(self, error):
         self.downloadState.increment_download_failed()
-        self.downloadState.complete_nugget(n=2)
+        self.downloadState.complete_nugget(n=self.downloadState.n_nuggets // self.downloadState.n_processes)
         self.debugLogger.errorLog(f'Error: {error[1]}')
 
     def songConversionStarted(self):
@@ -197,7 +207,7 @@ class YtDownloadController:
         self.downloadState.increment_conversion_failed()
         self.downloadState.complete_nugget()
         self.debugLogger.errorLog(f'File already exists: {filenames[0]}')
-        self.debugLogger.warningLog(f'File renamed to {filenames[1].split("/")[-1]}')
+        self.debugLogger.warningLog("Existing file preserved")
 
     def songConversionFinished(self, filename):
         self.downloadState.complete_nugget()
@@ -213,7 +223,11 @@ class YtDownloadController:
         pass
 
     def downloadFinished(self):
-        if self.downloadState.are_nuggets_done():
+        self.downloadState.n_finished += 1
+        if self.downloadState.n_finished == self.downloadState.n_processes:
+            self.downloadState.nuggets_completed = self.downloadState.n_nuggets
+            self.mw.ytUrlInput.setEnabled(True)
+            self.mw.ytEditMetadataButton.setEnabled(True)
             self.debugLogger.infoLog(self.downloadState.get_stats_str())
             self.debugLogger.infoLog("-------- PROCESS FINISHED: YouTube yt Download -------")
             self.mw.ytDownloadButton.setEnabled(True)
@@ -221,33 +235,41 @@ class YtDownloadController:
         self.update_progress_bar()
 
     def downloadError(self, error):
+        self.downloadState.increment_download_failed()
         self.debugLogger.errorLog(f"Error: {error[1]}")
         self.mw.statusbar.showMessage("Download failed!")
-        self.mw.ytDownloadButton.setEnabled(True)
 
     def ytUrlInputChanged(self, text: str):
         """change the status icon to green if the url is valid. Also,
         if the title is found, split it and put the artist"""
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
+        self._retrieval_id += 1
+        request_id = self._retrieval_id
         self.metadataController.clear_payloads()
+        self.mw.ytDownloadButton.setEnabled(False)
+        self.mw.ytEditMetadataButton.setEnabled(False)
         if text == "":
             self.mw.ytEditMetadataButton.setEnabled(False)
             return
 
         worker = YtInfoWorker(self.ytInfo_fn, url=text.strip())
-        worker.signals.retrieval_started.connect(self.ytInfoRetrievalStarted)
-        worker.signals.retrieval_result.connect(self.ytInfoRetrievalResult)
+        worker.signals.retrieval_started.connect(lambda: self.ytInfoRetrievalStarted(request_id))
+        worker.signals.retrieval_result.connect(lambda info: self.ytInfoRetrievalResult(info, request_id))
         worker.signals.retrieval_finished.connect(self.ytInfoRetrievalFinished)
-        worker.signals.retrieval_error.connect(self.ytInfoRetrievalError)
+        worker.signals.retrieval_error.connect(lambda error: self.ytInfoRetrievalError(error, request_id))
         self.threadpool.start(worker)
 
     def ytInfo_fn(self, url):
         return get_yt_info_from_link(url=url)
 
-    def ytInfoRetrievalStarted(self):
+    def ytInfoRetrievalStarted(self, request_id=None):
+        if request_id is not None and request_id != self._retrieval_id:
+            return
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/grey_checkmark.png"))
 
-    def ytInfoRetrievalResult(self, info: YtInfoPayload):
+    def ytInfoRetrievalResult(self, info: YtInfoPayload, request_id=None):
+        if request_id is not None and request_id != self._retrieval_id:
+            return
         first_title = info.info[0][0]
         first_artist = info.info[0][1]
 
@@ -261,11 +283,16 @@ class YtDownloadController:
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/green_checkmark.png"))
         self.metadataController.yt_info_to_payload(yt_info=info.info)
         self.mw.ytEditMetadataButton.setEnabled(True)
+        self.mw.ytDownloadButton.setEnabled(True)
 
     def ytInfoRetrievalFinished(self):
         pass
 
-    def ytInfoRetrievalError(self, error):
+    def ytInfoRetrievalError(self, error, request_id=None):
+        if request_id is not None and request_id != self._retrieval_id:
+            return
+        self.debugLogger.errorLog(f"Could not load YouTube link: {error[1]}")
+        self.mw.ytDownloadButton.setEnabled(False)
         self.mw.ytUrlStatusIcon.setPixmap(QtGui.QPixmap("tp_interface/ui/icons/red_x.png"))
         self.mw.statusbar.clearMessage()
         self.mw.ytEditMetadataButton.setEnabled(False)

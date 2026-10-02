@@ -1,0 +1,11 @@
+[run]
+source = tp_engine,tp_conversion,tp_interface,utils
+branch = True
+omit =
+    */*_ui.py
+    tp_interface/output.py
+
+[report]
+fail_under = 80
+show_missing = True
+skip_covered = True
