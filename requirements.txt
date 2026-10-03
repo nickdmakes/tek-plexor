@@ -1,7 +1,7 @@
 python-ffmpeg==2.0.12
-pyqt6==6.9.1
+pyqt6==6.11.0
 # pytube==15.0.0
 pytubefix==11.2.0
-mutagen==1.47.0
-pyinstaller==6.15.0
+mutagen==1.48.1
+pyinstaller==6.22.3
 pathvalidate==3.3.1
