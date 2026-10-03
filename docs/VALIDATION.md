@@ -6,7 +6,7 @@ Date: 2026-10-02. The local baseline is macOS/arm64, Python 3.12.14, PyQt6 6.9.1
 
 | Check | Result | Limit |
 | --- | --- | --- |
-| Complete deterministic suite | 37 tests: 34 pass, three expected failures | Expected failures document deferred defects; they are not passing behavior |
+| Complete deterministic suite | 39 tests: 36 pass, three expected failures | Expected failures document deferred defects; they are not passing behavior |
 | Application coverage | 82% combined statement/branch measurement; CI floor 80% | Generated UI files excluded; native Qt worker thread tracing is incomplete; behavior is also asserted through real signal-driven E2E tests |
 | Offline E2E | Playlist lookup → metadata dialog edit → download workers → real FFmpeg → actual title/artist tags; single video with/without conversion/source retention | Only external YouTube provider objects are replaced with deterministic fixture providers |
 | Real codec integration | Stereo input to M4A, MP4, MP3, Ogg; valid duration and correct tags | Mono Ogg at 320 kbps is a reproduced pending defect |
@@ -85,3 +85,7 @@ The initial audit was local; the submission follow-up commits and pushes this ba
 | Distribution | Executable build and bounded process survival | Ready-window handshake, icons from alternate cwd, frozen live extraction, installation/signing; OPT-009/010, OPS-002 |
 
 Measure coverage as a regression indicator, not proof of correctness. Prefer an acceptance test that catches a destructive or wrong-stage behavior over tests for trivial getters or generated UI text.
+
+## Hosted submission follow-up
+
+The hosted Linux/macOS/Windows test matrix and Security job passed on the initial submission. Windows packaging exposed an inherited-output-pipe cleanup hang; the smoke check now captures output in a temporary file and terminates the entire launcher/application process tree. Two regression tests protect that cleanup and early-exit failure behavior. Check PR #1 for the latest rerun. The optional hosted live playlist failed with YouTube BotDetection; it remains a visible external-service failure. See [GitHub setup and operations](GITHUB_SETUP.md) for exact required checks and administrator actions.

@@ -12,7 +12,7 @@ Choose items by ID, for example: `Approve OPT-001 and OPT-002`. Track each item 
 
 | ID | Status | Change | Verification |
 | --- | --- | --- | --- |
-| BASE-001 | Implemented | Unit, real FFmpeg integration, and offline Qt end-to-end tests | 37 tests: 34 pass; three explicit expected failures below; 82% measured statement/branch coverage |
+| BASE-001 | Implemented | Unit, real FFmpeg integration, and offline Qt end-to-end tests | 39 tests: 36 pass; three explicit expected failures below; 82% measured statement/branch coverage |
 | BASE-002 | Implemented | CI tests on Linux Python 3.10/3.11/3.12, macOS 3.12, Windows 3.12; 80% coverage floor | Local suite passes; workflow passes actionlint; hosted matrix results must be confirmed on the PR |
 | BASE-003 | Implemented | Gitleaks history/worktree scans, dependency vulnerability audit, Bandit medium/high gate, fatal Python lint checks | No scan-detected secrets; zero known vulnerability records among 53 resolved development/runtime packages on local Python 3.12; no medium/high Bandit findings |
 | BASE-004 | Implemented | SHA-pinned Actions, read-only token, no stored checkout credentials, weekly Dependabot, gated build artifacts | Workflow lint passes; local macOS executable builds; startup check described in validation report |
