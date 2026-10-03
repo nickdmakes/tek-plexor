@@ -12,12 +12,12 @@ Choose items by ID, for example: `Approve OPT-001 and OPT-002`. Track each item 
 
 | ID | Status | Change | Verification |
 | --- | --- | --- | --- |
-| BASE-001 | Implemented | Unit, real FFmpeg integration, and offline Qt end-to-end tests | 39 tests: 36 pass; three explicit expected failures below; 82% measured statement/branch coverage |
+| BASE-001 | Implemented | Unit, real FFmpeg integration, and offline Qt end-to-end tests | 40 tests: 37 pass; three explicit expected failures below; 82% measured statement/branch coverage |
 | BASE-002 | Implemented | CI tests on Linux Python 3.10/3.11/3.12, macOS 3.12, Windows 3.12; 80% coverage floor | Local suite passes; workflow passes actionlint; hosted matrix results must be confirmed on the PR |
 | BASE-003 | Implemented | Gitleaks history/worktree scans, dependency vulnerability audit, Bandit medium/high gate, fatal Python lint checks | No scan-detected secrets; zero known vulnerability records among 53 resolved development/runtime packages on local Python 3.12; no medium/high Bandit findings |
 | BASE-004 | Implemented | SHA-pinned Actions, read-only token, no stored checkout credentials, weekly Dependabot, gated build artifacts | Workflow lint passes; local macOS executable builds; startup check described in validation report |
 | BASE-005 | Implemented | Legacy conversion helper invokes FFmpeg without a shell, checks failure before source deletion, and rejects existing output | Real filenames containing `&` convert correctly; failure preserves source; original high-severity Bandit finding removed |
-| BASE-006 | Implemented | Opt-in live playlist checker with empty-destination and collision safeguards | Latest live playlist: 35 tracks converted, every saved title/artist tag verified, 100% progress, zero errors |
+| BASE-006 | Implemented | Local-only VPN-acknowledged live checker, five-track default, empty-destination and collision safeguards | Latest live playlist: 35 tracks converted, every saved title/artist tag verified, 100% progress, zero errors |
 
 The baseline is submitted separately from the pending optimization work. See the pull request for hosted CI results. CI configuration cannot force merge protection without repository settings.
 
@@ -125,7 +125,7 @@ Evidence: icon paths are relative to the working directory (`yt_download_control
 
 Proposed change: resolve package resources independently of cwd; add actionable ffmpeg/runtime preflight; test the packaged app's real extraction/download/conversion. Decide whether to bundle FFmpeg separately with its licensing/distribution requirements.
 
-Acceptance: packaged app launched from a different directory shows icons and completes a live video/playlist; offline fixtures also pass; missing dependencies have readable errors; Linux/macOS/Windows artifacts are tested on their own platforms.
+Acceptance: packaged app launched from a different directory shows icons and completes a live video/playlist only when necessary through a verified VPN; offline fixtures also pass; missing dependencies have readable errors; Linux/macOS/Windows artifacts are tested on their own platforms.
 
 ### OPT-010 — Consolidate dependency declarations and test wheel installation
 

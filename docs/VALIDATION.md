@@ -6,7 +6,7 @@ Date: 2026-10-02. The local baseline is macOS/arm64, Python 3.12.14, PyQt6 6.9.1
 
 | Check | Result | Limit |
 | --- | --- | --- |
-| Complete deterministic suite | 39 tests: 36 pass, three expected failures | Expected failures document deferred defects; they are not passing behavior |
+| Complete deterministic suite | 40 tests: 37 pass, three expected failures | Expected failures document deferred defects; they are not passing behavior |
 | Application coverage | 82% combined statement/branch measurement; CI floor 80% | Generated UI files excluded; native Qt worker thread tracing is incomplete; behavior is also asserted through real signal-driven E2E tests |
 | Offline E2E | Playlist lookup → metadata dialog edit → download workers → real FFmpeg → actual title/artist tags; single video with/without conversion/source retention | Only external YouTube provider objects are replaced with deterministic fixture providers |
 | Real codec integration | Stereo input to M4A, MP4, MP3, Ogg; valid duration and correct tags | Mono Ogg at 320 kbps is a reproduced pending defect |
@@ -47,12 +47,12 @@ python -m unittest discover -s tests -v
 ## Live smoke test
 
 ```sh
-python scripts/live_smoke.py --playlist 'https://youtube.com/playlist?list=YOUR_PUBLIC_PLAYLIST_ID'
+python scripts/live_smoke.py --vpn-confirmed --playlist "$TEK_PLEXOR_TEST_URL"
 ```
 
-This downloads **all tracks**, up to 50 by default, to a temporary directory and checks saved audio duration, file count, tags, progress, and worker error counts. It does not authenticate or use cookies. To retain validation output, add `--destination data/live-check`; the folder must be empty. The checker refuses case-insensitive filename collisions while OPT-002 is pending. A parent process enforces a deadline and terminates the test process tree on expiry.
+This downloads **all tracks**, up to 5 by default, to a temporary directory and checks saved audio duration, file count, tags, progress, and worker error counts. Live testing is exceptional and requires an active VPN; `--vpn-confirmed` is an operator acknowledgment, not automatic VPN detection. It does not authenticate or use cookies. To retain validation output, add `--destination data/live-check`; the folder must be empty. The checker refuses case-insensitive filename collisions while OPT-002 is pending. A parent process enforces a deadline and terminates the test process tree on expiry.
 
-The normal PR gate uses fixture-backed E2E tests. For a live hosted test, run the `CI` workflow manually and supply the optional public `live_playlist` input. Live YouTube failures block that manual run; the weekly deterministic/security run does not download playlists automatically.
+The normal PR gate uses fixture-backed E2E tests. All hosted workflows, including manual and weekly runs, are offline with respect to YouTube. Live validation is local-only, exceptional, and requires an active VPN plus `--vpn-confirmed`. The acknowledgment does not automatically verify VPN routing; the operator must check it first.
 
 ## Expected failures and remediation
 
@@ -88,4 +88,4 @@ Measure coverage as a regression indicator, not proof of correctness. Prefer an 
 
 ## Hosted submission follow-up
 
-The hosted Linux/macOS/Windows test matrix and Security job passed on the initial submission. Windows packaging exposed an inherited-output-pipe cleanup hang; the smoke check now captures output in a temporary file and terminates the entire launcher/application process tree. Two regression tests protect that cleanup and early-exit failure behavior. Check PR #1 for the latest rerun. The optional hosted live playlist failed with YouTube BotDetection; it remains a visible external-service failure. See [GitHub setup and operations](GITHUB_SETUP.md) for exact required checks and administrator actions.
+The hosted Linux/macOS/Windows test matrix and Security job passed on the initial submission. Windows packaging exposed an inherited-output-pipe cleanup hang; the smoke check now captures output in a temporary file and terminates the entire launcher/application process tree. Two regression tests protect that cleanup and early-exit failure behavior. Check PR #1 for the latest rerun. The earlier optional hosted live playlist failed with YouTube BotDetection. Following the user’s VPN-only constraint, the live hosted job and its input were removed; CI now uses offline provider fixtures exclusively. See [GitHub setup and operations](GITHUB_SETUP.md) for exact required checks and administrator actions.

@@ -16,7 +16,7 @@ The submitting account can push and open PRs but cannot administer repository se
 - `Package (macos-latest)`
 - `Package (windows-latest)`
 
-Require the branch to be up to date before merging. Choose administrator bypass policy explicitly. Do not require `Live playlist (opt-in)`: it is intentionally skipped for PRs and depends on YouTube availability.
+Require the branch to be up to date before merging. Choose administrator bypass policy explicitly.
 
 Review and merge PR #1 once its latest checks pass. This puts the weekly scheduled checks and Dependabot configuration on the default branch. No new repository secrets are needed for this baseline.
 
@@ -28,15 +28,17 @@ PRs and main pushes run deterministic tests, coverage, security scans, and execu
 
 ## Live YouTube validation
 
-The manual CI workflow accepts an optional `live_playlist` URL. An external refusal must remain a visible failed check. The initial GitHub-hosted run rejected the supplied playlist with PyTubeFix `BotDetection` during metadata retrieval, although the local full playlist run passed all 35 tracks. Hosted IP reputation therefore prevents claiming a successful live GitHub download.
+Hosted CI has no live-download job or playlist input. Manual workflow dispatch runs the same offline checks. Live checks are permitted only when necessary, locally through an active VPN. The initial GitHub-hosted run rejected the supplied playlist with PyTubeFix `BotDetection` during metadata retrieval, although the local full playlist run passed all 35 tracks. Hosted IP reputation therefore prevents claiming a successful live GitHub download.
 
-Run locally from a network YouTube accepts:
+Only if live validation is necessary: activate and verify VPN routing, set `TEK_PLEXOR_TEST_URL` explicitly, then run locally:
 
 ```sh
-python scripts/live_smoke.py --playlist 'https://youtube.com/playlist?list=PLf-a-fxTPecY'
+python scripts/live_smoke.py --vpn-confirmed --playlist "$TEK_PLEXOR_TEST_URL"
 ```
 
-FFmpeg must be installed. The command uses temporary outputs and validates every file. Do not add personal cookies or authentication material to the repository to bypass provider restrictions. A self-hosted runner or authenticated-provider design needs separate review; neither is required for the deterministic merge gate.
+A small reference candidate is [DEAF KEV — Invincible (NCS)](https://www.youtube.com/watch?v=J2X5mJ3HDYE), linked by the [official NCS track page](https://ncs.io/INVINCIBLE). This reference was located through web search only; it was not played, downloaded, or tested. It is not a default or executable fixture. Prefer a single track; any user-chosen playlist is limited to five tracks by default.
+
+FFmpeg must be installed. The command uses temporary outputs and validates every file. Do not add personal cookies or authentication material to the repository to bypass provider restrictions.
 
 ## Known validation boundaries
 

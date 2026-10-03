@@ -103,7 +103,7 @@ Tests use deterministic audio fixtures, real FFmpeg conversion, and offscreen Qt
 workers/editor interactions. Live YouTube checks are opt-in:
 
 ```sh
-python scripts/live_smoke.py --playlist 'https://youtube.com/playlist?list=YOUR_PUBLIC_PLAYLIST_ID'
+python scripts/live_smoke.py --vpn-confirmed --playlist "$TEK_PLEXOR_TEST_URL"
 ```
 
 CI covers Linux, macOS, Windows, and Python 3.10–3.12; it checks dependencies,
@@ -165,3 +165,5 @@ Soma Szabo - soma.szabo15@gmail.com
 Project Link: [https://github.com/dj-devtek/tek-plexor](https://github.com/dj-devtek/tek-plexor)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
+Live downloads are exceptional and local-only: activate and verify a VPN before setting `TEK_PLEXOR_TEST_URL` and using `--vpn-confirmed`. CI uses offline fixtures. See [GitHub setup](docs/GITHUB_SETUP.md) for a reference-only single-track candidate and merge protection instructions.

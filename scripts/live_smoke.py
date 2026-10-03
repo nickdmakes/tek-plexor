@@ -81,9 +81,13 @@ def main():
     parser.add_argument('--playlist', required=True)
     parser.add_argument('--destination', type=Path)
     parser.add_argument('--timeout', type=int, default=240)
-    parser.add_argument('--max-tracks', type=int, default=50)
+    parser.add_argument('--max-tracks', type=int, default=5)
+    parser.add_argument('--vpn-confirmed', action='store_true',
+                        help='Explicitly acknowledge that a VPN is active for this necessary live test')
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if not args.vpn_confirmed:
+        parser.error('Live testing is disabled unless a VPN is active and --vpn-confirmed is supplied')
     if not args.worker:
         raise SystemExit(run_with_deadline(
             [sys.executable, str(Path(__file__).resolve()), *sys.argv[1:], '--worker'],
