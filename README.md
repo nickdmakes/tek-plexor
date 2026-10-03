@@ -49,7 +49,7 @@ to bring out the best sound.
 
 * Python Language
 * PyQt6
-* PyTube
+* PyTubeFix
 
 ## User Interface
 ![TekPlexor UI](public/tek-plexor-ui.png)
@@ -60,31 +60,61 @@ to bring out the best sound.
 
 ### Prerequisites
 
-#### poetry
-poetry is a virtual environment and package manager tool used to organize TexPlexor development. Instructions for install can be found [here](https://python-poetry.org/docs/)
-
-#### ffmpeg
-In the code, Python makes system calls to the ffmpeg tool for audio codec conversion. You will need to have this tool installed on your machine for the app to work.
-Instructions for install can be found [here](https://ffmpeg.org/download.html)
+* Python 3.10–3.12 (3.12 recommended)
+* [ffmpeg](https://ffmpeg.org/download.html) available on your PATH
 
 ### Installation
 
-1. Clone the repo and navigate into the directory
-   ```sh
-   git clone https://github.com/dj-devtek/tek-plexor.git
-   cd tek-plexor
-   ```
-3. Configure and install the environemt
+From the repository directory:
 
-   First, poetry needs to be configured to add the venv directly to the project directory (optional)
-   ```sh
-   poetry config virtualenvs.in-project true
-   ```
+```sh
+python3.12 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
+```
 
-   Now, setup the venv and install the packages required for the application
-   ```sh
-   poetry install --no-root
-   ```
+PyTubeFix 11.2.0 supports the current YouTube playlist layout; older versions
+can return an empty playlist for a valid shared link.
+
+### Usage
+
+Run from the repository directory so UI icons can be found:
+
+```sh
+python main.py
+```
+
+In the **YouTube** tab, paste a video or shared playlist URL. Wait for the green
+checkmark, review the tracks with **Edit Metadata**, select a destination folder,
+and click **Download**. The same tab handles both videos and playlists.
+Conversion is enabled by default with M4A at 320 kbps and source-file deletion.
+Uncheck **Conversion** to keep the downloaded audio without transcoding.
+Existing converted files are preserved and reported in the debug console.
+
+### Validation and CI
+
+```sh
+python -m pip install -r requirements-dev.txt
+python scripts/run_tests.py
+python -m coverage report
+```
+
+Tests use deterministic audio fixtures, real FFmpeg conversion, and offscreen Qt
+workers/editor interactions. Live YouTube checks are opt-in:
+
+```sh
+python scripts/live_smoke.py --vpn-confirmed --playlist "$TEK_PLEXOR_TEST_URL"
+```
+
+CI covers Linux, macOS, Windows, and Python 3.10–3.12; it checks dependencies,
+secrets, medium/high static security findings, fatal lint, and an 80% coverage
+floor before building executable artifacts. Dependabot proposes weekly updates.
+
+See [validation and known limitations](docs/VALIDATION.md), the
+[security review](docs/SECURITY_REVIEW.md), and the
+[prioritized approval backlog](docs/OPTIMIZATION_BACKLOG.md). Three reproduced
+edge-case defects are explicitly marked expected failures awaiting backlog fixes.
+An administrator must enable required status checks after the first hosted run.
 
 ### Development
 Start by activating the virtual environment
@@ -98,10 +128,7 @@ source .venv/bin/activate
 .venv\Scripts\activate
 ```
 
-To open the PyQt6 designer editor, run
-```sh
-pyqt6-tools designer
-```
+The optional Qt Designer editor is available with a separate Qt installation.
 pyqt6 .ui files can be found under **tek-plexor/tp_interface/ui**. Once you have saved new changes in designer, convert the .ui file to Python with the following command **from the tp_interface directory**...
 ```sh
 pyuic6 -o main_window_ui.py -x ui/main_window.ui
@@ -138,3 +165,5 @@ Soma Szabo - soma.szabo15@gmail.com
 Project Link: [https://github.com/dj-devtek/tek-plexor](https://github.com/dj-devtek/tek-plexor)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
+Live downloads are exceptional and local-only: activate and verify a VPN before setting `TEK_PLEXOR_TEST_URL` and using `--vpn-confirmed`. CI uses offline fixtures. See [GitHub setup](docs/GITHUB_SETUP.md) for a reference-only single-track candidate and merge protection instructions.

@@ -1,6 +1,7 @@
 # from pytube import YouTube, Playlist
 from pytubefix import YouTube, Playlist
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.error import HTTPError
 from multiprocessing import cpu_count
 from pathvalidate import sanitize_filename
 import time
@@ -51,7 +52,7 @@ def get_yt_info_from_link(url: str):
             yt = YouTube(url)
             optimized_info = optimize_yt_info(yt.title,
                                               yt.author,
-                                              yt.vid_info['videoDetails']['author'],
+                                              yt.vid_info.get('videoDetails', {}).get('author', ''),
                                               yt.watch_url)
             return YtInfoPayload([optimized_info], False)
     except Exception as e:
@@ -61,7 +62,7 @@ def get_yt_info_from_link(url: str):
 # asynchronous function to get video info. Called by get_playlist_videos
 def get_playlist_video_info_fn(url):
     yt = YouTube(url)
-    return yt.title, yt.author, yt.vid_info['videoDetails']['author'], yt.watch_url
+    return yt.title, yt.author, yt.vid_info.get('videoDetails', {}).get('author', ''), yt.watch_url
 
 
 # Parsing a Playlist object requires creating a new YouTube object for each video in the playlist.
@@ -69,12 +70,12 @@ def get_playlist_video_info_fn(url):
 def get_playlist_videos(playlist: Playlist):
     start = time.time()
     processes = []
-    with ThreadPoolExecutor(max_workers=cpu_count()-1) as executor:
+    with ThreadPoolExecutor(max_workers=max(1, min(8, cpu_count()-1))) as executor:
         for url in playlist.video_urls:
             processes.append(executor.submit(get_playlist_video_info_fn, url))
 
     video_titles = []
-    for task in as_completed(processes):
+    for task in processes:
         video_titles.append(task.result())
 
     end = time.time()
@@ -112,18 +113,20 @@ def optimize_yt_info(title: str, author: str, info_artist: str, url: str):
 
 
 def download_single_audio(url: str, filename: str, out_path="./"):
-    try:
-        yt = YouTube(url)
-        all_streams = yt.streams.filter(only_audio=True).order_by('abr').desc()
-        # debug
-        for stream in all_streams:
-            print(stream)
-        
-        # extension handling
-        stream = all_streams.first()
-        ext = stream.subtype
-        filename += f".{ext}"
-        filename = sanitize_filename(filename)
-        return stream.download(filename=filename, output_path=out_path, skip_existing=True), filename
-    except Exception as e:
-        raise YTAudioDownloadException(e)
+    for attempt in range(3):
+        try:
+            yt = YouTube(url)
+            stream = yt.streams.filter(only_audio=True).order_by('abr').desc().first()
+            if stream is None:
+                raise YTAudioDownloadException("No audio stream is available for this video")
+            output_filename = sanitize_filename(f"{filename}.{stream.subtype}")
+            path = stream.download(filename=output_filename, output_path=out_path,
+                                   skip_existing=True, timeout=30)
+            return path, output_filename
+        except HTTPError as e:
+            if e.code not in (403, 429, 500, 502, 503, 504) or attempt == 2:
+                raise YTAudioDownloadException(e) from e
+            # Refresh signed stream URLs instead of retrying an expired URL.
+            time.sleep(attempt + 1)
+        except Exception as e:
+            raise YTAudioDownloadException(e) from e

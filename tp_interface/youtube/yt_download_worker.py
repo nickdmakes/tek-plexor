@@ -1,4 +1,4 @@
-import os, sys, traceback
+import sys, traceback
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QRunnable
 from tp_conversion.converter import FileExistsException, AudioConversionException
 from tp_engine.yt_api import YTAudioDownloadException
@@ -50,9 +50,7 @@ class YtDownloadWorker(QRunnable):
             exctype, value = sys.exc_info()[:2]
             self.signals.original_song_download_error.emit((exctype, value, traceback.format_exc()))
         except FileExistsException as e:
-            # rename file with .bak extension
-            os.rename(e.filename, f'{e.filename}.bak')
-            self.signals.song_conversion_file_exists_error.emit((e.filename, f'{e.filename}.bak'))
+            self.signals.song_conversion_file_exists_error.emit((str(e.filename),))
         except AudioConversionException:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
