@@ -76,7 +76,7 @@ jobs:
         run: python -m ruff check --isolated --select E9,F821,F823 main.py tp_engine tp_conversion tp_interface utils scripts tests
       - name: Save coverage
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.os }}-${{ matrix.python }}
           path: coverage.xml
@@ -150,7 +150,7 @@ jobs:
         if: runner.os == 'Windows'
         run: python scripts/smoke_packaged.py dist/tek_plexor.exe
       - name: Upload tested executable
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tek-plexor-${{ matrix.os }}
           path: dist/
